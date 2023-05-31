@@ -22,7 +22,7 @@ public class NewsFromSiteBot extends TelegramLongPollingBot {
     @Override
     public String getBotToken() {
         // TODO
-        return null;
+        return "6098183432:AAH9IfwhEApVtPlhFzVbt5i3fw5P_Wr41fI";
     }
 
     @Override
