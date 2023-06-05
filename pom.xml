@@ -16,6 +16,7 @@
 	<description>TelegramBot</description>
 	<properties>
 		<java.version>17</java.version>
+		<telegram.version>6.5.0</telegram.version>
 	</properties>
 	<dependencies>
 
@@ -23,9 +24,10 @@
 		<dependency>
 			<groupId>org.telegram</groupId>
 			<artifactId>telegrambots</artifactId>
-			<version>6.5.0</version>
+			<version>${telegram.version}</version>
 		</dependency>
 
+		<!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-web -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
