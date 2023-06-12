@@ -1,16 +1,24 @@
 package com.project.telegrambot.service;
 
 import com.project.telegrambot.config.BotConfig;
+import com.project.telegrambot.model.User;
+import com.project.telegrambot.model.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import java.sql.Timestamp;
 
 
 @Component
 public class NewsFromSiteBot extends TelegramLongPollingBot {
+
+    @Autowired
+    private UserRepository userRepository;
 
     final BotConfig config;
 
@@ -42,6 +50,8 @@ public class NewsFromSiteBot extends TelegramLongPollingBot {
 
             switch (messageText) {
                 case "/start":
+
+                        registerUser(update.getMessage());
                         startCommandReceived(chatId, update.getMessage().getChat().getFirstName());
                         break;
 
@@ -55,6 +65,25 @@ public class NewsFromSiteBot extends TelegramLongPollingBot {
 
 
     }
+
+    private void registerUser(Message msg) {
+        if(userRepository.findById(msg.getChatId()).isEmpty()){
+
+            var chatId = msg.getChatId();
+            var chat = msg.getChat();
+
+            User user = new User();
+
+            user.setChatId(chatId);
+            user.setFirstName(chat.getFirstName());
+            user.setLastName(chat.getLastName());
+            user.setUserName(chat.getUserName());
+            user.setRegisteredAt(new Timestamp(System.currentTimeMillis()));
+
+            userRepository.save(user);
+        }
+    }
+
     private void startCommandReceived(long chatId, String name){
 
         String answer = "Hi, " + name + ", nice to meet you!";
