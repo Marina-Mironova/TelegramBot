@@ -1,6 +1,8 @@
 package com.project.telegrambot.model;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 
 
@@ -11,6 +13,8 @@ import java.sql.Timestamp;
 public class User {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+
     private Long chatId;
 
     private String firstName;
