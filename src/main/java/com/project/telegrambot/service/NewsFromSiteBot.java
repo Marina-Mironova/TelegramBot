@@ -18,9 +18,12 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.project.telegrambot.model.User.*;
+
 
 @Component
 public class NewsFromSiteBot extends TelegramLongPollingBot {
+
 
     @Autowired
     private UserRepository userRepository;
@@ -33,14 +36,15 @@ public class NewsFromSiteBot extends TelegramLongPollingBot {
 
         this.config = config;
         List<BotCommand> listOfCommands = new ArrayList<>();
-        listOfCommands.add(new BotCommand("/start", "get a welcome message"));
-        /*listOfCommands.add(new BotCommand("/mydata", "get your data stored"));
-        listOfCommands.add(new BotCommand("/deleteData", "delete my data"));
+        listOfCommands.add(new BotCommand("/start", "register and get a welcome message"));
+        listOfCommands.add(new BotCommand("/mydata", "get your data stored"));
+        listOfCommands.add(new BotCommand("/active-subscriptions", "list of your active subscriptions"));
+        //listOfCommands.add(new BotCommand("/deleteData", "delete my data"));
         listOfCommands.add(new BotCommand("/help", "info how to use this bot"));
-        listOfCommands.add(new BotCommand("/subscribeChannel", "choose sources for your rss feed"));
-        listOfCommands.add(new BotCommand("/unsubscribeChannel", "choose sources you don't want anymore in your rss feed"));
-        listOfCommands.add(new BotCommand("/refreshFrequency", "choose new time interval between refreshing feed"));
-        listOfCommands.add(new BotCommand("/stop", "stop sending new rss to you"));*/
+        listOfCommands.add(new BotCommand("/add subscription", "add subscription for your rss feed"));
+        //listOfCommands.add(new BotCommand("/unsubscribeChannel", "choose sources you don't want anymore in your rss feed"));
+        //listOfCommands.add(new BotCommand("/refreshFrequency", "choose new time interval between refreshing feed"));
+        //listOfCommands.add(new BotCommand("/stop", "stop sending new rss to you"));
         try{
             this.execute(new SetMyCommands(listOfCommands, new BotCommandScopeDefault(), null));
 
@@ -84,6 +88,41 @@ public class NewsFromSiteBot extends TelegramLongPollingBot {
                         sendMessage(chatId, HELP_TEXT);
                         break;
 
+                case "/mydata":
+
+                        myDataCommand(chatId);
+                        break;
+
+                case "/deleteData":
+
+                        sendMessage(chatId, "there should be deleting your data");
+                        break;
+
+                case "/add subscription":
+
+                        sendMessage(chatId, "there should be choosing the channel to subscribe");
+                        break;
+
+                case "/unsubscribeChannel":
+
+                    sendMessage(chatId, "there should be choosing the channel to unsubscribe");
+                        break;
+
+                case "/refreshFrequency":
+
+                    sendMessage(chatId, "there should be choosing the frequency of news refreshing");
+                        break;
+
+                case "/stop":
+
+                    sendMessage(chatId, "there should be stopping using this bot and receiving news");
+                        break;
+
+                case "/active-subscriptions":
+
+                    sendMessage(chatId, "there should be stopping using this bot and receiving news");
+                    break;
+
                 default:
                     sendMessage(chatId, "Sorry, command was not recognized.");
 
@@ -118,6 +157,13 @@ public class NewsFromSiteBot extends TelegramLongPollingBot {
         String answer = "Hi, " + name + ", nice to meet you!";
 
         sendMessage(chatId, answer);
+    }
+
+    private void myDataCommand(long chatId) {
+
+        User user = new User();
+        String myData = user.toString();
+        sendMessage(chatId, myData);
     }
 
     private void sendMessage(long chatId, String textToSend) {
