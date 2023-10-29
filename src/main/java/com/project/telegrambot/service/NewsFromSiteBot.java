@@ -93,35 +93,13 @@ public class NewsFromSiteBot extends TelegramLongPollingBot {
                         myDataCommand(chatId);
                         break;
 
-                case "/deleteData":
 
-                        sendMessage(chatId, "there should be deleting your data");
-                        break;
-
-                case "/add subscription":
-
-                        sendMessage(chatId, "there should be choosing the channel to subscribe");
-                        break;
-
-                case "/unsubscribeChannel":
-
-                    sendMessage(chatId, "there should be choosing the channel to unsubscribe");
-                        break;
-
-                case "/refreshFrequency":
-
-                    sendMessage(chatId, "there should be choosing the frequency of news refreshing");
-                        break;
 
                 case "/stop":
 
                     sendMessage(chatId, "there should be stopping using this bot and receiving news");
                         break;
 
-                case "/active-subscriptions":
-
-                    sendMessage(chatId, "there should be stopping using this bot and receiving news");
-                    break;
 
                 default:
                     sendMessage(chatId, "Sorry, command was not recognized.");
