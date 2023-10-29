@@ -52,7 +52,7 @@ public class NewsFromSiteBot extends TelegramLongPollingBot {
                 case "/start":
 
                         registerUser(update.getMessage());
-                        startCommandReceived(chatId, update.getMessage().getChat().getFirstName());
+                        startCommandReceived(chatId, update.getMessage().getChat().getUserName());
                         break;
 
                 default:
@@ -75,8 +75,6 @@ public class NewsFromSiteBot extends TelegramLongPollingBot {
             User user = new User();
 
             user.setChatId(chatId);
-            user.setFirstName(chat.getFirstName());
-            user.setLastName(chat.getLastName());
             user.setUserName(chat.getUserName());
             user.setRegisteredAt(new Timestamp(System.currentTimeMillis()));
 
