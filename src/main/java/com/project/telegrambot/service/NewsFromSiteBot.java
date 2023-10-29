@@ -6,24 +6,52 @@ import com.project.telegrambot.model.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
+import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
+import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
+
+import static com.project.telegrambot.model.User.*;
 
 
 @Component
 public class NewsFromSiteBot extends TelegramLongPollingBot {
+
 
     @Autowired
     private UserRepository userRepository;
 
     final BotConfig config;
 
+    static final String HELP_TEXT = "Here should be help for using this bot.";
+
     public NewsFromSiteBot(BotConfig config) {
+
         this.config = config;
+        List<BotCommand> listOfCommands = new ArrayList<>();
+        listOfCommands.add(new BotCommand("/start", "register and get a welcome message"));
+        listOfCommands.add(new BotCommand("/mydata", "get your data stored"));
+        listOfCommands.add(new BotCommand("/active-subscriptions", "list of your active subscriptions"));
+        //listOfCommands.add(new BotCommand("/deleteData", "delete my data"));
+        listOfCommands.add(new BotCommand("/help", "info how to use this bot"));
+        listOfCommands.add(new BotCommand("/add subscription", "add subscription for your rss feed"));
+        //listOfCommands.add(new BotCommand("/unsubscribeChannel", "choose sources you don't want anymore in your rss feed"));
+        //listOfCommands.add(new BotCommand("/refreshFrequency", "choose new time interval between refreshing feed"));
+        //listOfCommands.add(new BotCommand("/stop", "stop sending new rss to you"));
+        try{
+            this.execute(new SetMyCommands(listOfCommands, new BotCommandScopeDefault(), null));
+
+        }
+        catch (TelegramApiException e) {
+            System.out.println(e.getMessage()); // TODO log
+        }
     }
 
 
@@ -54,6 +82,24 @@ public class NewsFromSiteBot extends TelegramLongPollingBot {
                         registerUser(update.getMessage());
                         startCommandReceived(chatId, update.getMessage().getChat().getFirstName());
                         break;
+
+                case "/help":
+
+                        sendMessage(chatId, HELP_TEXT);
+                        break;
+
+                case "/mydata":
+
+                        myDataCommand(chatId);
+                        break;
+
+
+
+                case "/stop":
+
+                    sendMessage(chatId, "there should be stopping using this bot and receiving news");
+                        break;
+
 
                 default:
                     sendMessage(chatId, "Sorry, command was not recognized.");
@@ -89,6 +135,13 @@ public class NewsFromSiteBot extends TelegramLongPollingBot {
         String answer = "Hi, " + name + ", nice to meet you!";
 
         sendMessage(chatId, answer);
+    }
+
+    private void myDataCommand(long chatId) {
+
+        User user = new User();
+        String myData = user.toString();
+        sendMessage(chatId, myData);
     }
 
     private void sendMessage(long chatId, String textToSend) {
