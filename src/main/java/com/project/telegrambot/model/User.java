@@ -50,8 +50,6 @@ public class User {
     public String toString() {
         return "User{" +
                 "chatId=" + chatId +
-                ", firstName='" + firstName + '\'' +
-                ", lastName='" + lastName + '\'' +
                 ", userName='" + userName + '\'' +
                 ", registeredAt=" + registeredAt +
                 '}';
