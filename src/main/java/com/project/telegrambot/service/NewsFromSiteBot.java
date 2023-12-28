@@ -138,6 +138,10 @@ public class NewsFromSiteBot extends TelegramLongPollingBot {
     private void myDataCommand(long chatId) {
 
         User user = new User();
+        user.getChatId();
+        user.getUserName();
+        user.getRegisteredAt();
+
         String myData = user.toString();
         sendMessage(chatId, myData);
     }
