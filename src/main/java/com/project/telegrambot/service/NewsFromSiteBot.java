@@ -41,6 +41,9 @@ public class NewsFromSiteBot extends TelegramLongPollingBot {
 
     static final String HELP_TEXT = "Here should be help for using this bot.";
 
+    static final String YES_BUTTON = "YES_BUTTON";
+    static final String NO_BUTTON = "NO_BUTTON";
+
     public NewsFromSiteBot(BotConfig config) {
 
         this.config = config;
@@ -122,32 +125,14 @@ public class NewsFromSiteBot extends TelegramLongPollingBot {
             long messageId = update.getCallbackQuery().getMessage().getMessageId();
             long chatId = update.getCallbackQuery().getMessage().getChatId();
 
-            if (callbackData.equals("YES_BUTTON")){
+            if (callbackData.equals(YES_BUTTON)){
                 String text = "You pressed YES button.";
-                EditMessageText message = new EditMessageText();
-                message.setChatId(String.valueOf(chatId));
-                message.setText(text);
-                message.setMessageId((int) messageId);
+                executeMessageText(chatId, text, messageId);
 
-                try {
-                    execute(message);
-                }
-                catch (TelegramApiException e) {
-                    log.error("Error occurred: " + e.getMessage());
-                }
-            } else if (callbackData.equals("NO_BUTTON")) {
+
+            } else if (callbackData.equals(NO_BUTTON)) {
                 String text = "You pressed NO button.";
-                    EditMessageText message = new EditMessageText();
-                    message.setChatId(String.valueOf(chatId));
-                    message.setText(text);
-                    message.setMessageId((int) messageId);
-
-                    try {
-                        execute(message);
-                    }
-                    catch (TelegramApiException e) {
-                        log.error("Error occurred: " + e.getMessage());
-                    }
+                executeMessageText(chatId, text, messageId);
             }
         }
 
@@ -166,12 +151,12 @@ public class NewsFromSiteBot extends TelegramLongPollingBot {
         var yesButton = new InlineKeyboardButton();
 
         yesButton.setText("Yes");
-        yesButton.setCallbackData("YES_BUTTON");
+        yesButton.setCallbackData(YES_BUTTON);
 
         var noButton = new InlineKeyboardButton();
 
         noButton.setText("No");
-        noButton.setCallbackData("NO_BUTTON");
+        noButton.setCallbackData(NO_BUTTON);
 
         rowInLine.add(yesButton);
         rowInLine.add(noButton);
@@ -258,6 +243,19 @@ public class NewsFromSiteBot extends TelegramLongPollingBot {
         }
         catch (TelegramApiException e) {
 
+        }
+    }
+
+    private void executeMessageText(long chatId,String text, long messageId){
+        EditMessageText message = new EditMessageText();
+        message.setChatId(String.valueOf(chatId));
+        message.setText(text);
+        message.setMessageId((int) messageId);
+        try {
+            execute(message);
+        }
+        catch (TelegramApiException e) {
+            log.error("Error occurred: " + e.getMessage());
         }
     }
 }
