@@ -94,7 +94,7 @@ public class NewsFromSiteBot extends TelegramLongPollingBot {
 
                 case "/mydata":
 
-                        myDataCommand(chatId, update.getMessage().getChat().getUserName()); //TODO solve data type problem
+                 //       myDataCommand(chatId, update.getMessage().getChat().getUserName()); //TODO solve data type problem
                         break;
 
 
