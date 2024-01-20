@@ -1,11 +1,14 @@
 package com.project.telegrambot.service;
 
 import com.project.telegrambot.config.BotConfig;
+import com.project.telegrambot.model.Ads;
+import com.project.telegrambot.model.AdsRepository;
 import com.project.telegrambot.model.User;
 import com.project.telegrambot.model.UserRepository;
 import com.vdurmont.emoji.EmojiParser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
@@ -37,12 +40,17 @@ public class NewsFromSiteBot extends TelegramLongPollingBot {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private AdsRepository adsRepository;
+
     final BotConfig config;
 
     static final String HELP_TEXT = "Here should be help for using this bot.";
 
     static final String YES_BUTTON = "YES_BUTTON";
     static final String NO_BUTTON = "NO_BUTTON";
+
+    static final String ERROR_TEXT = "Error occurred: ";
 
     public NewsFromSiteBot(BotConfig config) {
 
@@ -83,7 +91,54 @@ public class NewsFromSiteBot extends TelegramLongPollingBot {
             String messageText = update.getMessage().getText();
             long chatId = update.getMessage().getChatId();
 
-            switch (messageText) {
+            if(messageText.contains("/send") && config.getOwnerId() == chatId) {
+                var textToSend = EmojiParser.parseToUnicode(messageText.substring(messageText.indexOf(" ")));
+                var users = userRepository.findAll();
+                for (User user: users){
+                    prepareAndSendMessage(user.getChatId(), textToSend);
+                }
+            }
+
+            else {
+
+                switch (messageText) {
+                    case "/start":
+
+                        registerUser(update.getMessage());
+                        startCommandReceived(chatId, update.getMessage().getChat().getFirstName());
+                        break;
+
+                    case "/help":
+
+                        prepareAndSendMessage(chatId, HELP_TEXT);
+                        break;
+
+                    case "/register":
+
+                        register(chatId);
+                        break;
+
+                    default:
+
+                        prepareAndSendMessage(chatId, "Sorry, command was not recognized");
+
+                }
+            }
+        } else if (update.hasCallbackQuery()) {
+            String callbackData = update.getCallbackQuery().getData();
+            long messageId = update.getCallbackQuery().getMessage().getMessageId();
+            long chatId = update.getCallbackQuery().getMessage().getChatId();
+
+            if(callbackData.equals(YES_BUTTON)){
+                String text = "You pressed YES button";
+                executeEditMessageText(chatId, text, messageId);
+            }
+            else if(callbackData.equals(NO_BUTTON)){
+                String text = "You pressed NO button";
+                executeEditMessageText(chatId, text, messageId);
+            }
+        }
+   /*         switch (messageText) {
                 case "/start":
 
                         registerUser(update.getMessage());
@@ -134,11 +189,13 @@ public class NewsFromSiteBot extends TelegramLongPollingBot {
                 String text = "You pressed NO button.";
                 executeMessageText(chatId, text, messageId);
             }
-        }
+        }*/
 
 
 
     }
+
+
 
     private void register(long chatId) {
         SendMessage message = new SendMessage();
@@ -166,12 +223,7 @@ public class NewsFromSiteBot extends TelegramLongPollingBot {
         markupInLine.setKeyboard(rowsInLine);
         message.setReplyMarkup(markupInLine);
 
-        try {
-            execute(message);
-        }
-        catch (TelegramApiException e) {
-            log.error("Error occurred: " + e.getMessage());
-        }
+        executeMessage(message);
     }
 
     private void registerUser(Message msg) {
@@ -238,15 +290,10 @@ public class NewsFromSiteBot extends TelegramLongPollingBot {
         message.setReplyMarkup(keyboardMarkup);
 
 
-        try {
-            execute(message);
-        }
-        catch (TelegramApiException e) {
-
-        }
+        executeMessage(message);
     }
 
-    private void executeMessageText(long chatId,String text, long messageId){
+    private void executeEditMessageText(long chatId,String text, long messageId){
         EditMessageText message = new EditMessageText();
         message.setChatId(String.valueOf(chatId));
         message.setText(text);
@@ -255,7 +302,35 @@ public class NewsFromSiteBot extends TelegramLongPollingBot {
             execute(message);
         }
         catch (TelegramApiException e) {
-            log.error("Error occurred: " + e.getMessage());
+            log.error(ERROR_TEXT + e.getMessage());
+        }
+    }
+
+    private void executeMessage(SendMessage message){
+        try {
+            execute(message);
+        }
+        catch (TelegramApiException e) {
+            log.error(ERROR_TEXT + e.getMessage());
+        }
+    }
+
+    private void prepareAndSendMessage(Long chatId, String textToSend) {
+        SendMessage message = new SendMessage();
+        message.setChatId(String.valueOf(chatId));
+        message.setText(textToSend);
+        executeMessage(message);
+    }
+
+    @Scheduled(cron = "${cron.scheduler}")
+    private void sendAds(){
+        var ads = adsRepository.findAll();
+        var users = userRepository.findAll();
+
+        for(Ads ad: ads) {
+            for (User user: users){
+                prepareAndSendMessage(user.getChatId(), ad.getAd());
+            }
         }
     }
 }
