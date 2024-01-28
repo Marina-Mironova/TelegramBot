@@ -54,6 +54,10 @@ public class NewsFromSiteBot extends TelegramLongPollingBot {
 
     public NewsFromSiteBot(BotConfig config) {
 
+       // private String weatherApiKey = "";
+       // private String language = "en";
+      //  private WeatherUnits units = WeatherUnits.metric;
+
         this.config = config;
         List<BotCommand> listOfCommands = new ArrayList<>();
         listOfCommands.add(new BotCommand("/start", "register and get a welcome message"));
@@ -235,10 +239,13 @@ public class NewsFromSiteBot extends TelegramLongPollingBot {
             User user = new User();
 
             user.setChatId(chatId);
+            user.setFirstName(chat.getFirstName());
+            user.setLastName(chat.getLastName());
             user.setUserName(chat.getUserName());
             user.setRegisteredAt(new Timestamp(System.currentTimeMillis()));
 
             userRepository.save(user);
+            log.info("user saved: " + user);
         }
     }
 
