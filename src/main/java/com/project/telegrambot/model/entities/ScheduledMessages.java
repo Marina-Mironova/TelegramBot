@@ -9,13 +9,13 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@Entity(name = "adsTable")
+@Entity(name = "scheduledMessageTable")
 public class ScheduledMessages {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    private String ad;
+    private String scheduledMessage;
 
 }

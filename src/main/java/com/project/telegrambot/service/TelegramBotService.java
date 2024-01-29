@@ -277,16 +277,13 @@ public class TelegramBotService extends TelegramLongPollingBot {
         List<KeyboardRow> keyboardRows = new ArrayList<>();
         KeyboardRow row = new KeyboardRow();
 
-        row.add("weather");
-        row.add("get random joke");
+        row.add("weather now");
+        row.add("weather forecast for 1 day");
 
         keyboardRows.add(row);
 
         row = new KeyboardRow();
 
-        row.add("register");
-        row.add("check my data");
-        row.add("delete my data");
 
         keyboardRows.add(row);
 
@@ -334,7 +331,7 @@ public class TelegramBotService extends TelegramLongPollingBot {
 
         for(ScheduledMessages ad: ads) {
             for (User user: users){
-                prepareAndSendMessage(user.getChatId(), ad.getAd());
+                prepareAndSendMessage(user.getChatId(), ad.getScheduledMessage());
             }
         }
     }

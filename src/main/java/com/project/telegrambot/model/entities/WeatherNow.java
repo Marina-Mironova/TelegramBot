@@ -10,8 +10,8 @@ import lombok.Setter;
 @Getter
 @Setter
 @Data
-@Entity(name = "weatherForecast")
-public class Weather {
+@Entity(name = "weatherNow")
+public class WeatherNow {
 
 
         @Id
