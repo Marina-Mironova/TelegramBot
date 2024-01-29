@@ -38,8 +38,7 @@ public class TelegramBotService extends TelegramLongPollingBot {
     @Autowired
     private UserRepository userRepository;
 
-    @Autowired
-    private ScheduledMessagesRepository scheduledMessagesRepository;
+
 
     final BotConfig config;
 
@@ -317,23 +316,13 @@ public class TelegramBotService extends TelegramLongPollingBot {
         }
     }
 
-    private void prepareAndSendMessage(Long chatId, String textToSend) {
+    void prepareAndSendMessage(Long chatId, String textToSend) {
         SendMessage message = new SendMessage();
         message.setChatId(String.valueOf(chatId));
         message.setText(textToSend);
         executeMessage(message);
     }
 
-    @Scheduled(cron = "${cron.scheduler}")
-    private void sendAds(){
-        var ads = scheduledMessagesRepository.findAll();
-        var users = userRepository.findAll();
 
-        for(ScheduledMessages ad: ads) {
-            for (User user: users){
-                prepareAndSendMessage(user.getChatId(), ad.getScheduledMessage());
-            }
-        }
-    }
 }
 
