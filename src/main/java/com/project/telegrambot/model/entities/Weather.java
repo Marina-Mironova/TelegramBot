@@ -1,4 +1,4 @@
-package com.project.telegrambot.model;
+package com.project.telegrambot.model.entities;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;

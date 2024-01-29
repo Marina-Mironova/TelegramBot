@@ -1,10 +1,10 @@
 package com.project.telegrambot.service;
 
 import com.project.telegrambot.config.BotConfig;
-import com.project.telegrambot.model.Ads;
-import com.project.telegrambot.model.AdsRepository;
-import com.project.telegrambot.model.User;
-import com.project.telegrambot.model.UserRepository;
+import com.project.telegrambot.model.entities.ScheduledMessages;
+import com.project.telegrambot.model.repositories.ScheduledMessagesRepository;
+import com.project.telegrambot.model.entities.User;
+import com.project.telegrambot.model.repositories.UserRepository;
 import com.vdurmont.emoji.EmojiParser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,19 +29,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static com.project.telegrambot.model.User.*;
-
 
 @Slf4j
 @Component
-public class NewsFromSiteBot extends TelegramLongPollingBot {
+public class TelegramBotService extends TelegramLongPollingBot {
 
 
     @Autowired
     private UserRepository userRepository;
 
     @Autowired
-    private AdsRepository adsRepository;
+    private ScheduledMessagesRepository scheduledMessagesRepository;
 
     final BotConfig config;
 
@@ -52,7 +50,7 @@ public class NewsFromSiteBot extends TelegramLongPollingBot {
 
     static final String ERROR_TEXT = "Error occurred: ";
 
-    public NewsFromSiteBot(BotConfig config) {
+    public TelegramBotService(BotConfig config) {
 
        // private String weatherApiKey = "";
        // private String language = "en";
@@ -331,10 +329,10 @@ public class NewsFromSiteBot extends TelegramLongPollingBot {
 
     @Scheduled(cron = "${cron.scheduler}")
     private void sendAds(){
-        var ads = adsRepository.findAll();
+        var ads = scheduledMessagesRepository.findAll();
         var users = userRepository.findAll();
 
-        for(Ads ad: ads) {
+        for(ScheduledMessages ad: ads) {
             for (User user: users){
                 prepareAndSendMessage(user.getChatId(), ad.getAd());
             }
