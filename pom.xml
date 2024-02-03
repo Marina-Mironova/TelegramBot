@@ -72,6 +72,12 @@
 			<artifactId>emoji-java</artifactId>
 			<version>5.1.1</version>
 		</dependency>
+
+		<dependency>
+			<groupId>com.konghq</groupId>
+			<artifactId>unirest-java</artifactId>
+			<version>3.14.2</version>
+		</dependency>
 	</dependencies>
 
 	<build>
