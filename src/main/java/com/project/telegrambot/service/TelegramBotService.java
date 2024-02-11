@@ -53,9 +53,7 @@ public class TelegramBotService extends TelegramLongPollingBot {
 
     public TelegramBotService(BotConfig config) {
 
-       // private String weatherApiKey = "";
-       // private String language = "en";
-      //  private WeatherUnits units = WeatherUnits.metric;
+
 
         this.config = config;
         List<BotCommand> listOfCommands = new ArrayList<>();
