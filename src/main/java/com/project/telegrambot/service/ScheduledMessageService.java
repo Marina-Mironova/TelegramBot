@@ -11,13 +11,13 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 @Slf4j
-@Component
+//@Component
 public class ScheduledMessageService extends TelegramBotService{
 
-    @Autowired
+  //  @Autowired
     private UserRepository userRepository;
 
-    @Autowired
+   // @Autowired
     private ScheduledMessagesRepository scheduledMessagesRepository;
 
     public ScheduledMessageService(BotConfig config) {
