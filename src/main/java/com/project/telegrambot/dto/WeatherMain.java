@@ -1,4 +1,4 @@
-package com.project.telegrambot.model.dto;
+package com.project.telegrambot.dto;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
