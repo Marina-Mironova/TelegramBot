@@ -1,31 +1,32 @@
 package com.project.telegrambot.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
 @RequiredArgsConstructor
+@Data
 public class CurrentWeather {
 
-    private String LocalObservationDateTime;
+    @JsonProperty("LocalObservationDateTime")
+    private String LocalDateTime;
 
-    private String WeatherText;
+    @JsonProperty("WeatherText")
+    private String weatherText;
 
-    private int WeatherIcon;
+    @JsonProperty("WeatherIcon")
+    private int weatherIcon;
 
-    private boolean IsDayTime;
+    @JsonProperty("IsDayTime")
+    private boolean isDayTime;
 
-    private double TemperatureMetricValue;
+    @JsonProperty("Temperature")
+    private List<TemperatureCurrent> Temperature;
 
-    private String TemperatureMetricUnit;
-
-    private Object RealFeelTemperature;
-
-    private String WindDirectionEnglish;
-
-    private Object WindSpeed;
-
-    private Object Pressure;
-
-    private String Link;
+    @JsonProperty("Link")
+    private String link;
 }

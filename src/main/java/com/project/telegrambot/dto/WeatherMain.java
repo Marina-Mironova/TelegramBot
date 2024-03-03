@@ -1,11 +1,13 @@
 package com.project.telegrambot.dto;
 
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
+@Data
 public class WeatherMain {
     @Value("${weather.now.url}")
     private String ACCU_WEATHER_URL_NOW;

@@ -262,7 +262,7 @@ public class TelegramBotService extends TelegramLongPollingBot {
         }
         else {
             Optional<User> findChatId = userRepository.findById(chatId);
-            sendMessage(chatId, String.valueOf(msg.getChatId()) );  //TODO user data schould be here
+            sendMessage(chatId, String.valueOf(msg.getChatId()) );  //TODO user data should be here
 
         }
     }
