@@ -12,7 +12,13 @@ import org.springframework.stereotype.Component;
 @JsonIgnoreProperties
 public class Location {
 
-    @JsonProperty
-    private String LocalisedName;
+    @JsonProperty("LocalisedName")
+    private String localisedName;
+
+    @JsonProperty("Key")
+    private String locationKey;
+
+    @JsonProperty("Type")
+    private String locationType;
 
 }

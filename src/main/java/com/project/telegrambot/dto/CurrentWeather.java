@@ -18,14 +18,11 @@ public class CurrentWeather {
     @JsonProperty("WeatherText")
     private String weatherText;
 
-    @JsonProperty("WeatherIcon")
-    private int weatherIcon;
-
     @JsonProperty("IsDayTime")
     private boolean isDayTime;
 
     @JsonProperty("Temperature")
-    private List<TemperatureCurrent> Temperature;
+    private TemperatureCurrent temperatureCurrent;
 
     @JsonProperty("Link")
     private String link;
