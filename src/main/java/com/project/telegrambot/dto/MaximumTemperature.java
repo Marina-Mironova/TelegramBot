@@ -5,14 +5,17 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import org.springframework.stereotype.Component;
 
-@Data
 @Component
+@Data
 @JsonIgnoreProperties
-public class TemperatureForecast {
+public class MaximumTemperature {
 
-    @JsonProperty("Minimum")
-    private MinimumTemperature minimumTemperature;
+    @JsonProperty("Value")
+    private double value;
 
-    @JsonProperty("Maximum")
-    private MaximumTemperature maximumTemperature;
+    @JsonProperty("Unit")
+    private String unit;
+
+    @JsonProperty("UnitType")
+    private int unitType;
 }

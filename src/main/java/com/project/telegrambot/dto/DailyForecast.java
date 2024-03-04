@@ -5,22 +5,18 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
+
 
 @Component
 @RequiredArgsConstructor
 @Data
 public class DailyForecast {
 
-    @JsonProperty
+    @JsonProperty("Date")
     private String DailyForecastsDate;
 
-    @JsonProperty
-    private String DailyForecastsSunRise;
 
-    @JsonProperty
-    private String DailyForecastsSunSet;
 
-    @JsonProperty
-    private List<TemperatureForecast> Temperature;
+    @JsonProperty("Temperature")
+    private TemperatureForecast temperatureForecast;
 }
