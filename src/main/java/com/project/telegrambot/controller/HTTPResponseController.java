@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.telegrambot.model.entities.User;
 import kong.unirest.core.HttpResponse;
 import kong.unirest.core.JsonNode;
+import kong.unirest.core.StringResponse;
 import kong.unirest.core.Unirest;
 
 import java.util.List;

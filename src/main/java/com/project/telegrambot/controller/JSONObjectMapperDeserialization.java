@@ -1,36 +1,41 @@
 package com.project.telegrambot.controller;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.project.telegrambot.dto.CurrentWeather;
-import kong.unirest.core.JsonNode;
 
-import java.io.DataInput;
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.util.List;
-import java.util.Map;
 
 public interface JSONObjectMapperDeserialization {
 
-    public default void JSONtoPOJO(JsonNode responseBody) throws IOException {
-    ObjectMapper mapper = new ObjectMapper();
-    CurrentWeather currentWeather = mapper.readValue((DataInput) responseBody, CurrentWeather.class);
-    }
-
-
-    public default void JSONtoList(JsonNode responseBody ) throws IOException {
+    public default void JSONtoPOJO(String json) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
-        @SuppressWarnings("unchecked")
-        List<CurrentWeather> currentWeatherList = (List<CurrentWeather>) mapper.readValue((DataInput) responseBody, CurrentWeather.class);
+        try {
+            Object object = mapper.readValue(json, new TypeReference<Object>() {
+                @Override
+                public Type getType() {
+                    return super.getType();
+                }
+            });
 
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
-/*
-    public default void JSONtoMap(JsonNode responseBody) throws IOException {
+
+
+    public default void JSONtoList(String json) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
-        Map<String, Object> currentWeatherMap = mapper.readValue((DataInput) responseBody, CurrentWeather.class);
+        try {
+            List<Object> objectList = mapper.readValue(json, new TypeReference<List<Object>>() {});
 
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
-*/
+
 
 
 
