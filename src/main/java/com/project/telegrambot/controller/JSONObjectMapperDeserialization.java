@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface JSONObjectMapperDeserialization {
 
-    public default void JSONtoPOJO(String json) throws IOException {
+    default void JSONtoPOJO(String json) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         try {
             Object object = mapper.readValue(json, new TypeReference<>() {
@@ -29,7 +29,8 @@ public interface JSONObjectMapperDeserialization {
     public default void JSONtoList(String json) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         try {
-            List<Object> objectList = mapper.readValue(json, new TypeReference<List<Object>>() {});
+            List<Object> objectList = mapper.readValue(json, new TypeReference<>() {
+            });
 
         } catch (IOException e) {
             e.printStackTrace();
