@@ -10,22 +10,21 @@ import kong.unirest.core.Unirest;
 import java.util.List;
 
 public interface HTTPResponseController {
-    public default JsonNode httpResponseJson(String apiUrl){
-        JsonNode responseBody = null;
-    try {
-        // Выполняем GET-запрос к веб-сервису
-        HttpResponse<JsonNode> jsonResponse = Unirest.get(apiUrl)
-                .header("Accept", "application/json")
-                .asJson();
+    public default String httpResponseJson(String apiUrl) {
+        String jsonString = null;
+        try {
+            // Выполняем GET-запрос к веб-сервису
+            HttpResponse<String> jsonResponse = Unirest.get(apiUrl)
+                    .asString();
 
-        // Получаем JSON-тело ответа
-        responseBody = jsonResponse.getBody();
+            // Получаем JSON-тело ответа
+            jsonString = jsonResponse.getBody();
 
 
-    } catch (Exception e) {
-        // Обрабатываем возможные исключения
-        e.printStackTrace();
-    }
-        return responseBody;
+        } catch (Exception e) {
+            // Обрабатываем возможные исключения
+            e.printStackTrace();
+        }
+        return jsonString;
     }
 }

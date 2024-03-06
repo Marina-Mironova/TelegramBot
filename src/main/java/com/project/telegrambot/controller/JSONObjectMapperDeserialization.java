@@ -12,7 +12,7 @@ public interface JSONObjectMapperDeserialization {
     public default void JSONtoPOJO(String json) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         try {
-            Object object = mapper.readValue(json, new TypeReference<Object>() {
+            Object object = mapper.readValue(json, new TypeReference<>() {
                 @Override
                 public Type getType() {
                     return super.getType();
