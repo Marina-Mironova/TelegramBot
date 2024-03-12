@@ -14,11 +14,11 @@ public interface HTTPResponseController {
         String jsonString = null;
         try {
             // Выполняем GET-запрос к веб-сервису
-            HttpResponse<String> jsonResponse = Unirest.get(apiUrl)
-                    .asString();
+            jsonString = Unirest.get(apiUrl)
+                    .asString().getBody();
 
             // Получаем JSON-тело ответа
-            jsonString = jsonResponse.getBody();
+           // jsonString = jsonResponse.getBody();
 
 
         } catch (Exception e) {

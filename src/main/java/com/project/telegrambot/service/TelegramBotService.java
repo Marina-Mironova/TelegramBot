@@ -1,15 +1,11 @@
 package com.project.telegrambot.service;
 
 import com.project.telegrambot.config.BotConfig;
-import com.project.telegrambot.model.entities.ScheduledMessages;
-import com.project.telegrambot.model.repositories.ScheduledMessagesRepository;
 import com.project.telegrambot.model.entities.User;
 import com.project.telegrambot.model.repositories.UserRepository;
 import com.vdurmont.emoji.EmojiParser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Primary;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
@@ -322,6 +318,20 @@ public class TelegramBotService extends TelegramLongPollingBot {
         message.setText(textToSend);
         executeMessage(message);
     }
+
+    public Object cityUserAnswer(Update update) {
+        if (update.hasMessage() && update.getMessage().hasText()) {
+            String messageText = update.getMessage().getText();
+            long chatId = update.getMessage().getChatId();
+            return messageText;
+        }
+        return WeatherLocationService.cityAsk();
+    }
+
+
+
+
+
 
 
 }
