@@ -13,12 +13,12 @@ import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 
 @Service
-@Data
+
 public class WeatherLocationService implements JSONObjectMapperDeserialization, HTTPResponseController {
 
-    final String ACCU_WEATHER_LOCATION_URL = WeatherMain.getACCU_WEATHER_LOCATION_URL();
-    final String ACCU_WEATHER_API_KEY = WeatherMain.getACCU_WEATHER_API_KEY();
-    final String ACCU_WEATHER_URL_NOW = WeatherMain.getACCU_WEATHER_URL_NOW();
+    final String LOCATION_URL = new WeatherMain().getACCU_WEATHER_LOCATION_URL();
+    final String API_KEY = new WeatherMain().getACCU_WEATHER_API_KEY();
+    final String WEATHER_URL_NOW = new WeatherMain().getACCU_WEATHER_URL_NOW();
 
     public static Object cityAsk(){
         SendMessage message = new SendMessage();
@@ -28,8 +28,8 @@ public class WeatherLocationService implements JSONObjectMapperDeserialization, 
 
     public void cityRequest(String cityName, String url) {//тут что-то не так!!!! Надо вчитаться
         try {
-            HttpResponse<String> city = Unirest.get(ACCU_WEATHER_LOCATION_URL)
-                    .queryString("apiKey", ACCU_WEATHER_API_KEY)
+            HttpResponse<String> city = Unirest.get(LOCATION_URL)
+                    .queryString("apiKey", API_KEY)
                     .queryString("q", cityName)
                     .asString();
         } catch (Exception e) {
@@ -48,7 +48,7 @@ public class WeatherLocationService implements JSONObjectMapperDeserialization, 
     }
 
        public String locationKey(String cityName) {
-           String locationKey = Unirest.get(ACCU_WEATHER_LOCATION_URL)
+           String locationKey = Unirest.get(LOCATION_URL)
                    .asJson()
                    .getBody()
                    .getObject()
@@ -61,13 +61,32 @@ public class WeatherLocationService implements JSONObjectMapperDeserialization, 
 
     //получение текущей погоды
     private JSONObject getCurrentWeatherObject(String locationKey) throws Exception {
-        HttpResponse<JsonNode> response = Unirest.get(ACCU_WEATHER_URL_NOW)
+        HttpResponse<JsonNode> response = Unirest.get(WEATHER_URL_NOW)
                 .routeParam("locationKey", locationKey)
-                .queryString("apiKey", ACCU_WEATHER_API_KEY)
+                .queryString("apiKey", API_KEY)
                 .asJson();
         return response.getBody().getObject();
     }
 
+    /**
+     * Get current weather
+     * @param city City to get
+     * @return Current weather
+     * @throws Exception
 
+    private CurrentWeather getCurrentWeather(String city) throws Exception {
+        try {
+            JSONObject weatherObject = getWeatherObject("weather", city);
+            CurrentWeather weather = JsonUtil.toObject(weatherObject, CurrentWeather.class);
+            if(weather == null) {
+                throw new Exception("Cannot parse weather");
+            }
+            return weather;
+        } catch(Exception e) {
+            logger.error("Cannot get weather data", e);
+            throw e;
+        }
+    }
+     */
 
 }
