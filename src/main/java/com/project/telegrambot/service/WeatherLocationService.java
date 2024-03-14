@@ -1,7 +1,8 @@
 package com.project.telegrambot.service;
 
 import com.project.telegrambot.controller.HTTPResponseController;
-import com.project.telegrambot.controller.JSONObjectMapperDeserialization;
+import com.project.telegrambot.controller.JsonUtil;
+import com.project.telegrambot.dto.CurrentWeather;
 import com.project.telegrambot.dto.WeatherMain;
 import kong.unirest.core.HttpResponse;
 import kong.unirest.core.JsonNode;
@@ -11,10 +12,14 @@ import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.Chat;
+
+import static com.sun.org.apache.xml.internal.serializer.utils.Utils.messages;
+//import org.json.JSONObject;
 
 @Service
 
-public class WeatherLocationService implements JSONObjectMapperDeserialization, HTTPResponseController {
+public class WeatherLocationService{
 
     final String LOCATION_URL = new WeatherMain().getACCU_WEATHER_LOCATION_URL();
     final String API_KEY = new WeatherMain().getACCU_WEATHER_API_KEY();
@@ -70,23 +75,57 @@ public class WeatherLocationService implements JSONObjectMapperDeserialization, 
 
     /**
      * Get current weather
-     * @param city City to get
+
      * @return Current weather
      * @throws Exception
+     * */
 
-    private CurrentWeather getCurrentWeather(String city) throws Exception {
+    private CurrentWeather getCurrentWeather() throws Exception {
         try {
-            JSONObject weatherObject = getWeatherObject("weather", city);
+            JSONObject weatherObject = getCurrentWeatherObject(locationKey(cityName));
+            //TODO написать метод дя чтения названия города на английском
             CurrentWeather weather = JsonUtil.toObject(weatherObject, CurrentWeather.class);
             if(weather == null) {
                 throw new Exception("Cannot parse weather");
             }
             return weather;
         } catch(Exception e) {
-            logger.error("Cannot get weather data", e);
+            //logger.error("Cannot get weather data", e);
             throw e;
         }
     }
+
+
+
+    /**
+     * Send weather in city to chat
+     * @param chat Chat
+
      */
+    private void sendCurrentWeather(Chat chat, String locationKey) {
+        try {
+            CurrentWeather currentWeather = getCurrentWeather();
+
+            int temperature = (int)Math.round(currentWeather.getTemperatureCurrent().getTempMetricCurrent().getValue());
+            String unit = String.format(currentWeather.getTemperatureCurrent().getTempMetricCurrent().getUnit());
+            String localDateTime = String.format(currentWeather.getLocalDateTime());
+            boolean isDayTime;
+
+            String link = String.format(currentWeather.getLink());
+
+            String weatherText = String.format(messages.getString("current_weather_format"),
+                    localDateTime,
+                    currentWeather.getWeatherText(),
+                    temperature, unit, link);
+
+
+            sendReply(chat, weather);
+        } catch(Exception e) {
+            logger.error("Weather error", e);
+            sendReply(chat, messages.getString("weather_get_error"));
+        }
+    }
 
 }
+
+
