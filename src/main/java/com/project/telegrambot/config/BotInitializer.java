@@ -1,6 +1,7 @@
 package com.project.telegrambot.config;
 
 import com.project.telegrambot.service.TelegramBotService;
+import com.project.telegrambot.service.WeatherService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.ContextRefreshedEvent;
@@ -17,6 +18,7 @@ public class BotInitializer {
 
 
     TelegramBotService bot;
+
 
     @EventListener({ContextRefreshedEvent.class})
     public void init() throws TelegramApiException{

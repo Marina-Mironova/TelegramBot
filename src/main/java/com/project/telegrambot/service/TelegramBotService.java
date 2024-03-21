@@ -4,6 +4,7 @@ import com.project.telegrambot.config.BotConfig;
 import com.project.telegrambot.model.entities.User;
 import com.project.telegrambot.model.repositories.UserRepository;
 import com.vdurmont.emoji.EmojiParser;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -28,7 +29,7 @@ import java.util.Optional;
 
 
 @Slf4j
-
+@Data
 @Component
 public class TelegramBotService extends TelegramLongPollingBot {
 
@@ -312,6 +313,8 @@ public class TelegramBotService extends TelegramLongPollingBot {
         }
     }
 
+
+
     void prepareAndSendMessage(Long chatId, String textToSend) {
         SendMessage message = new SendMessage();
         message.setChatId(String.valueOf(chatId));
@@ -319,13 +322,13 @@ public class TelegramBotService extends TelegramLongPollingBot {
         executeMessage(message);
     }
 
-    public Object cityUserAnswer(Update update) {
+    public static Object cityUserAnswer(Update update) {
         if (update.hasMessage() && update.getMessage().hasText()) {
             String messageText = update.getMessage().getText();
             long chatId = update.getMessage().getChatId();
             return messageText;
         }
-        return WeatherLocationService.cityAsk();
+        return WeatherService.cityAsk();
     }
 
 

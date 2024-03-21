@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 @Data
-public class DailyForecast {
+public class DailyForecasts {
 
     @JsonProperty("Date")
     private String DailyForecastsDate;

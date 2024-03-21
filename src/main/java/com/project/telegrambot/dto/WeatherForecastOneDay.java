@@ -13,5 +13,5 @@ import java.util.List;
 public class WeatherForecastOneDay {
 
     @JsonProperty("DailyForecasts")
-    private List<DailyForecast> dailyForecast;
+    private List<DailyForecasts> dailyForecasts;
 }
