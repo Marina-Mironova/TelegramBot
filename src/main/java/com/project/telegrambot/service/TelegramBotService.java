@@ -57,6 +57,8 @@ public class TelegramBotService extends TelegramLongPollingBot {
         listOfCommands.add(new BotCommand("/start", "register and get a welcome message"));
         listOfCommands.add(new BotCommand("/mydata", "get your data stored"));
         listOfCommands.add(new BotCommand("/help", "info how to use this bot"));
+        listOfCommands.add(new BotCommand("/weathernow", "current weather"));
+        listOfCommands.add(new BotCommand("/dailyweather", "weather info for the next day"));
          //listOfCommands.add(new BotCommand("/stop", "stop sending new rss to you"));
         try{
             this.execute(new SetMyCommands(listOfCommands, new BotCommandScopeDefault(), null));
@@ -360,6 +362,45 @@ public class TelegramBotService extends TelegramLongPollingBot {
             case "/register":
 
                 register(chatId);
+                break;
+
+            case "/weathernow":
+
+              //  joke.ifPresent(randomJoke -> sendMessage(chatId, ));
+                String callbackData = update.getCallbackQuery().getData();
+                long chatId1 = update.getCallbackQuery().getMessage().getChatId();
+                WeatherService weather = new WeatherService();
+
+                WeatherService.cityAsk();
+                String userAnswer = cityUserAnswer(update);
+                if(userAnswer == null || userAnswer.isEmpty()){
+                    WeatherService.cityAsk();
+                }
+                else {
+                    String locationKey = weather.cityRequest(userAnswer);
+                    weather.sendCurrentWeather(chatId, locationKey);
+                }
+
+                break;
+
+            case "/dailyweather":
+
+                //callbackData = update.getCallbackQuery().getData();
+                //chatId1 = update.getCallbackQuery().getMessage().getChatId();
+                weather = new WeatherService();
+
+                WeatherService.cityAsk();
+                userAnswer = cityUserAnswer(update);
+                if(userAnswer == null || userAnswer.isEmpty()){
+                    WeatherService.cityAsk();
+                }
+                else {
+                    String locationKey = weather.cityRequest(userAnswer);
+                    weather.sendDailyWeather(chatId, locationKey);
+                    //TODO проверяй, куда отправляются погодные данные. На экран пользователю они не идут.
+                }
+
+
                 break;
 
             default:
