@@ -90,39 +90,41 @@ public class TelegramBotService extends TelegramLongPollingBot {
             long chatId = update.getMessage().getChatId();
 
             if(messageText.contains("/send") && config.getOwnerId() == chatId) {
-                var textToSend = EmojiParser.parseToUnicode(messageText.substring(messageText.indexOf(" ")));
-                var users = userRepository.findAll();
-                for (User user: users){
-                    prepareAndSendMessage(user.getChatId(), textToSend);
-                }
+                sendToAll(messageText);
             }
 
             else {
 
-                switch (messageText) {
-                    case "/start":
+                menuBot(messageText, chatId, update);
+            }
+        }
+        else if(update.hasCallbackQuery()){
 
-                        registerUser(update.getMessage());
-                        startCommandReceived(chatId, update.getMessage().getChat().getFirstName());
-                        break;
 
-                    case "/help":
+            String callbackData = update.getCallbackQuery().getData();
+            long chatId = update.getCallbackQuery().getMessage().getChatId();
+            WeatherService weather = new WeatherService();
 
-                        prepareAndSendMessage(chatId, HELP_TEXT);
-                        break;
+            WeatherService.cityAsk();
+            String userAnswer = cityUserAnswer(update);
+            if(userAnswer == null || userAnswer.isEmpty()){
+                WeatherService.cityAsk();
+            }
+            else {
+                String locationKey = weather.cityRequest(userAnswer);
+                if(callbackData.equals("weather now")) {
 
-                    case "/register":
+                    weather.sendCurrentWeather(chatId, locationKey);
 
-                        register(chatId);
-                        break;
+                } else if (callbackData.equals("weather forecast for 1 day")) {
 
-                    default:
-
-                        prepareAndSendMessage(chatId, "Sorry, command was not recognized");
-
+                    weather.sendDailyWeather(chatId, locationKey);
                 }
             }
-        } else if (update.hasCallbackQuery()) {
+
+
+
+        }/*else if (update.hasCallbackQuery()) {
             String callbackData = update.getCallbackQuery().getData();
             long messageId = update.getCallbackQuery().getMessage().getMessageId();
             long chatId = update.getCallbackQuery().getMessage().getChatId();
@@ -135,7 +137,7 @@ public class TelegramBotService extends TelegramLongPollingBot {
                 String text = "You pressed NO button";
                 executeEditMessageText(chatId, text, messageId);
             }
-        }
+        }*/
    /*         switch (messageText) {
                 case "/start":
 
@@ -322,14 +324,52 @@ public class TelegramBotService extends TelegramLongPollingBot {
         executeMessage(message);
     }
 
-    public static Object cityUserAnswer(Update update) {
+    public static String cityUserAnswer(Update update) {
         if (update.hasMessage() && update.getMessage().hasText()) {
-            String messageText = update.getMessage().getText();
-            long chatId = update.getMessage().getChatId();
-            return messageText;
+
+          //  long chatId = update.getMessage().getChatId();
+            return update.getMessage().getText();
         }
-        return WeatherService.cityAsk();
+
+        return null;
     }
+
+
+
+    private void sendToAll(String messageText){
+        var textToSend = EmojiParser.parseToUnicode(messageText.substring(messageText.indexOf(" ")));
+        var users = userRepository.findAll();
+        for (User user: users){
+            prepareAndSendMessage(user.getChatId(), textToSend);
+        }
+    }
+
+    private void menuBot(String messageText, long chatId, Update update){
+        switch (messageText) {
+            case "/start":
+
+                registerUser(update.getMessage());
+                startCommandReceived(chatId, update.getMessage().getChat().getFirstName());
+                break;
+
+            case "/help":
+
+                prepareAndSendMessage(chatId, HELP_TEXT);
+                break;
+
+            case "/register":
+
+                register(chatId);
+                break;
+
+            default:
+
+                prepareAndSendMessage(chatId, "Sorry, command was not recognized");
+
+        }
+    }
+
+
 
 
 

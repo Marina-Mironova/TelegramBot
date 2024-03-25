@@ -38,7 +38,7 @@ public class WeatherService {
         return null;
     }
 
-    public void cityRequest(String cityName) {//тут что-то не так!!!! Надо вчитаться
+    public String cityRequest(String cityName) {//тут что-то не так!!!! Надо вчитаться
         try {
             HttpResponse<String> city = Unirest.get(LOCATION_URL)
                     .queryString("apiKey", API_KEY)
@@ -51,7 +51,7 @@ public class WeatherService {
         }
         finally {
             try{
-                gettinglocationKey(cityName);
+                return gettinglocationKey(cityName);
             } catch (Exception e) {
                 throw new RuntimeException(e);
                 //TODO add to log
@@ -108,7 +108,7 @@ public class WeatherService {
      * @param chatId Chat
 
      */
-    private void sendCurrentWeather(Long chatId, String locationKey) {
+    void sendCurrentWeather(Long chatId, String locationKey) {
         TelegramBotService telegramBotService = new TelegramBotService(new BotConfig());
         try {
 
@@ -166,7 +166,7 @@ public class WeatherService {
         }
     }
 
-    private void sendDailyWeather(Long chatId, String locationKey) {
+     void sendDailyWeather(Long chatId, String locationKey) {
         TelegramBotService telegramBotService = new TelegramBotService(new BotConfig());
         try {
 
@@ -200,21 +200,20 @@ public class WeatherService {
     }
 
     private void LocationToUser(Update userAnswer){
-        cityAsk();
-        TelegramBotService.cityUserAnswer(userAnswer);// TODO надо импортировать сюда telegrambots или перенести этот класс
-        String cityName=null;//TODo заменить на строчный ответ пользователя
-        cityRequest(cityName);
+       //cityAsk();
+      //  TelegramBotService.cityUserAnswer(userAnswer);
+      //  cityRequest(cityName);
 
 
     }
 
     private void CurrentWeatherToUser(Long chatId, String locationKey){
-        LocationToUser();//TODO посмотреть, что именно должен принимать класс, и что такое Update
+      //  LocationToUser();
         sendCurrentWeather(chatId, locationKey);
     }
 
     private void DailyWeatherToUser(Long chatId, String locationKey){
-        LocationToUser();
+       // LocationToUser();
         sendDailyWeather(chatId, locationKey);
     }
 
