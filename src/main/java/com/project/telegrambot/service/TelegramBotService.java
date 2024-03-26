@@ -1,6 +1,7 @@
 package com.project.telegrambot.service;
 
 import com.project.telegrambot.config.BotConfig;
+import com.project.telegrambot.dto.Location;
 import com.project.telegrambot.model.entities.User;
 import com.project.telegrambot.model.repositories.UserRepository;
 import com.vdurmont.emoji.EmojiParser;
@@ -97,7 +98,11 @@ public class TelegramBotService extends TelegramLongPollingBot {
 
             else {
 
-                menuBot(messageText, chatId, update);
+                try {
+                    menuBot(messageText, chatId, update);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
             }
         }
         else if(update.hasCallbackQuery()){
@@ -113,7 +118,13 @@ public class TelegramBotService extends TelegramLongPollingBot {
                 WeatherService.cityAsk();
             }
             else {
-                String locationKey = weather.cityRequest(userAnswer);
+                Location location = null;
+                try {
+                    location = weather.getLocationObject(userAnswer);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+                String locationKey = WeatherService.getLocationKeyString(location);
                 if(callbackData.equals("weather now")) {
 
                     weather.sendCurrentWeather(chatId, locationKey);
@@ -346,7 +357,7 @@ public class TelegramBotService extends TelegramLongPollingBot {
         }
     }
 
-    private void menuBot(String messageText, long chatId, Update update){
+    private void menuBot(String messageText, long chatId, Update update) throws Exception {
         switch (messageText) {
             case "/start":
 
@@ -377,7 +388,8 @@ public class TelegramBotService extends TelegramLongPollingBot {
                     WeatherService.cityAsk();
                 }
                 else {
-                    String locationKey = weather.cityRequest(userAnswer);
+                    Location location = weather.getLocationObject(userAnswer);
+                    String locationKey = WeatherService.getLocationKeyString(location);
                     weather.sendCurrentWeather(chatId, locationKey);
                 }
 
@@ -395,7 +407,8 @@ public class TelegramBotService extends TelegramLongPollingBot {
                     WeatherService.cityAsk();
                 }
                 else {
-                    String locationKey = weather.cityRequest(userAnswer);
+                    Location location = weather.getLocationObject(userAnswer);
+                    String locationKey = WeatherService.getLocationKeyString(location);
                     weather.sendDailyWeather(chatId, locationKey);
                     //TODO проверяй, куда отправляются погодные данные. На экран пользователю они не идут.
                 }

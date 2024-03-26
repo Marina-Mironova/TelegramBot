@@ -2,23 +2,23 @@ package com.project.telegrambot.service;
 
 import com.project.telegrambot.config.BotConfig;
 import com.project.telegrambot.controller.JsonUtil;
-import com.project.telegrambot.dto.CurrentWeather;
-import com.project.telegrambot.dto.DailyForecasts;
-import com.project.telegrambot.dto.WeatherForecastOneDay;
-import com.project.telegrambot.dto.WeatherMain;
+import com.project.telegrambot.dto.*;
 import kong.unirest.core.HttpResponse;
 import kong.unirest.core.JsonNode;
 import kong.unirest.core.Unirest;
 import kong.unirest.core.json.JSONObject;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.sql.Update;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+
+import static com.project.telegrambot.service.TelegramBotService.ERROR_TEXT;
 
 
 //import org.json.JSONObject;
 
 @Service
-
+@Slf4j
 public class WeatherService {
 
     final String LOCATION_URL = new WeatherMain().getACCU_WEATHER_LOCATION_URL();
@@ -32,44 +32,58 @@ public class WeatherService {
     }
 */
 
-    public static Object cityAsk(){
+    public static void cityAsk(){
         SendMessage message = new SendMessage();
         message.setText("Please, write the name of the city.");
-        return null;
     }
 
-    public String cityRequest(String cityName) {//тут что-то не так!!!! Надо вчитаться
+    JSONObject locationRequest(String cityName) {
+        HttpResponse<JsonNode> response = null;
         try {
-            HttpResponse<String> city = Unirest.get(LOCATION_URL)
+            response = Unirest.get(LOCATION_URL)
                     .queryString("apiKey", API_KEY)
                     .queryString("q", cityName)
-                    .asString();
+                    .asJson();
+
         } catch (Exception e) {
-            //TODO add exception to log
+            log.error(ERROR_TEXT + e.getMessage());
+
             cityAsk();
 
         }
-        finally {
-            try{
-                return gettinglocationKey(cityName);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-                //TODO add to log
-            }
-        }
+
+        return response.getBody().getObject();
+
     }
 
-       public String gettinglocationKey(String cityName) {
-           String locationKey = Unirest.get(LOCATION_URL)
-                   .asJson()
-                   .getBody()
-                   .getObject()
-                   .getJSONObject("Key")
-                   .toString(); //????
-
-           return locationKey; //TODO вставить сеттер для LOCATION_KEY ?
+    Location getLocationObject(String cityName) throws Exception {
+       try {
+       JSONObject locationObject = locationRequest(cityName);
+       Location location = JsonUtil.toObject(locationObject, Location.class);
+       if(location == null) {
+           throw new Exception("Cannot parse location");
+       }
+       return location;
+       } catch(Exception e) {
+           log.error(ERROR_TEXT + e.getMessage()+"Cannot get weather data");
+           throw e;
        }
 
+
+   }
+
+    static String getLocationKeyString(Location location) {
+        String locationKey = String.format(location.getLocationKey());
+
+
+        return locationKey;
+    }
+     static String getLocalisedNameString(Location location) {
+
+        String localisedName = String.format(location.getLocalisedName());
+
+        return localisedName;
+    }
 
     //получение текущей погоды
     private JSONObject getCurrentWeatherObject(String locationKey) throws Exception {
@@ -88,15 +102,17 @@ public class WeatherService {
      * */
 
     private CurrentWeather getCurrentWeather(String cityName) throws Exception {
+
         try {
-            JSONObject weatherObject = getCurrentWeatherObject(gettinglocationKey(cityName));
+            String localisedName = getLocalisedNameString(getLocationObject(cityName));
+            JSONObject weatherObject = getCurrentWeatherObject(getLocationKeyString(getLocationObject(localisedName)));
             CurrentWeather weather = JsonUtil.toObject(weatherObject, CurrentWeather.class);
             if(weather == null) {
                 throw new Exception("Cannot parse weather");
             }
             return weather;
         } catch(Exception e) {
-            //logger.error("Cannot get weather data", e);
+            log.error(ERROR_TEXT + e.getMessage());
             throw e;
         }
     }
@@ -120,7 +136,7 @@ public class WeatherService {
 
             telegramBotService.prepareAndSendMessage(chatId, weatherText);
         } catch(Exception e) {
-            //logger.error("Weather error", e);
+            log.error(ERROR_TEXT + e.getMessage());
             telegramBotService.prepareAndSendMessage(chatId, "weather_get_error");
         }
     }
@@ -154,14 +170,15 @@ public class WeatherService {
 
     private WeatherForecastOneDay getDailyWeather(String cityName) throws Exception {
         try {
-            JSONObject weatherObject = getDailyWeatherObject(gettinglocationKey(cityName));
+            String localisedName = getLocalisedNameString(getLocationObject(cityName));
+            JSONObject weatherObject = getDailyWeatherObject(getLocationKeyString(getLocationObject(localisedName)));
             WeatherForecastOneDay weather = JsonUtil.toObject(weatherObject, WeatherForecastOneDay.class);
             if(weather == null) {
                 throw new Exception("Cannot parse weather");
             }
             return weather;
         } catch(Exception e) {
-            //logger.error("Cannot get weather data", e);
+            log.error(ERROR_TEXT + e.getMessage());
             throw e;
         }
     }
@@ -180,7 +197,7 @@ public class WeatherService {
                 telegramBotService.prepareAndSendMessage(chatId, weatherText);
             }
         } catch(Exception e) {
-            //logger.error("Weather error", e);
+            log.error(ERROR_TEXT + e.getMessage());
             telegramBotService.prepareAndSendMessage(chatId, "weather_get_error");
         }
     }
