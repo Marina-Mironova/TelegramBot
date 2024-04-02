@@ -109,13 +109,14 @@ public class TelegramBotService extends TelegramLongPollingBot {
 
 
             String callbackData = update.getCallbackQuery().getData();
+            long messageId = update.getCallbackQuery().getMessage().getMessageId();
             long chatId = update.getCallbackQuery().getMessage().getChatId();
             WeatherService weather = new WeatherService();
 
-            WeatherService.cityAsk();
+            cityAsk(chatId);
             String userAnswer = cityUserAnswer(update);
             if(userAnswer == null || userAnswer.isEmpty()){
-                WeatherService.cityAsk();
+                cityAsk(chatId);
             }
             else {
                 Location location = null;
@@ -126,8 +127,9 @@ public class TelegramBotService extends TelegramLongPollingBot {
                 }
                 String locationKey = WeatherService.getLocationKeyString(location);
                 if(callbackData.equals("weather now")) {
-
-                    weather.sendCurrentWeather(chatId, locationKey);
+                    String text = weather.sendCurrentWeather(chatId, locationKey);
+                    executeEditMessageText(chatId, text, messageId);
+                   // weather.sendCurrentWeather(chatId, locationKey);
 
                 } else if (callbackData.equals("weather forecast for 1 day")) {
 
@@ -347,6 +349,10 @@ public class TelegramBotService extends TelegramLongPollingBot {
         return null;
     }
 
+    public void cityAsk(long chatId){
+        String text = "Please, write the name of the city.";
+        prepareAndSendMessage(chatId,text);
+    }
 
 
     private void sendToAll(String messageText){
@@ -378,20 +384,9 @@ public class TelegramBotService extends TelegramLongPollingBot {
             case "/weathernow":
 
               //  joke.ifPresent(randomJoke -> sendMessage(chatId, ));
-                String callbackData = update.getCallbackQuery().getData();
-                long chatId1 = update.getCallbackQuery().getMessage().getChatId();
-                WeatherService weather = new WeatherService();
-
-                WeatherService.cityAsk();
-                String userAnswer = cityUserAnswer(update);
-                if(userAnswer == null || userAnswer.isEmpty()){
-                    WeatherService.cityAsk();
-                }
-                else {
-                    Location location = weather.getLocationObject(userAnswer);
-                    String locationKey = WeatherService.getLocationKeyString(location);
-                    weather.sendCurrentWeather(chatId, locationKey);
-                }
+              //  String callbackData = update.getCallbackQuery().getData();
+//long chatId = update.getCallbackQuery().getMessage().getChatId();
+              currentWeatherCommand(chatId, update);
 
                 break;
 
@@ -399,20 +394,7 @@ public class TelegramBotService extends TelegramLongPollingBot {
 
                 //callbackData = update.getCallbackQuery().getData();
                 //chatId1 = update.getCallbackQuery().getMessage().getChatId();
-                weather = new WeatherService();
-
-                WeatherService.cityAsk();
-                userAnswer = cityUserAnswer(update);
-                if(userAnswer == null || userAnswer.isEmpty()){
-                    WeatherService.cityAsk();
-                }
-                else {
-                    Location location = weather.getLocationObject(userAnswer);
-                    String locationKey = WeatherService.getLocationKeyString(location);
-                    weather.sendDailyWeather(chatId, locationKey);
-                    //TODO проверяй, куда отправляются погодные данные. На экран пользователю они не идут.
-                }
-
+               dailyWeatherCommand(chatId, update);
 
                 break;
 
@@ -420,6 +402,41 @@ public class TelegramBotService extends TelegramLongPollingBot {
 
                 prepareAndSendMessage(chatId, "Sorry, command was not recognized");
 
+        }
+
+
+    }
+
+
+    private void currentWeatherCommand(long chatId, Update update) throws Exception {
+        WeatherService weather = new WeatherService();
+
+        cityAsk(chatId);
+        String userAnswer = cityUserAnswer(update);
+        if(userAnswer == null || userAnswer.isEmpty()){
+            cityAsk(chatId);
+        }
+        else {
+            Location location = weather.getLocationObject(userAnswer);
+            String locationKey = WeatherService.getLocationKeyString(location);
+            weather.sendCurrentWeather(chatId, locationKey);
+        }
+
+
+    }
+
+    private void dailyWeatherCommand(long chatId, Update update) throws Exception {
+        WeatherService weather = new WeatherService();
+
+        cityAsk(chatId);
+        String userAnswer = cityUserAnswer(update);
+        if(userAnswer == null || userAnswer.isEmpty()){
+            cityAsk(chatId);
+        }
+        else {
+            Location location = weather.getLocationObject(userAnswer);
+            String locationKey = WeatherService.getLocationKeyString(location);
+            weather.sendDailyWeather(chatId, locationKey);
         }
     }
 

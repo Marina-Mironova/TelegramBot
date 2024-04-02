@@ -32,29 +32,44 @@ public class WeatherService {
     }
 */
 
-    public static void cityAsk(){
-        SendMessage message = new SendMessage();
-        message.setText("Please, write the name of the city.");
-    }
+
 
     JSONObject locationRequest(String cityName) {
-        HttpResponse<JsonNode> response = null;
+        var ref = new Object() {
+            JSONObject r;
+        };
         try {
-            response = Unirest.get(LOCATION_URL)
+            Unirest.get(LOCATION_URL)
                     .queryString("apiKey", API_KEY)
                     .queryString("q", cityName)
-                    .asJson();
+                    .asJson()
+                    .ifSuccess(response -> {
+                        log.info("location request was successful");
+                        ref.r = response.getBody().getObject();
+                       log.info(String.valueOf(response.getStatus()));
+                    })
+                    .ifFailure(response -> {
+                        log.error("Oh No! Status" + response.getStatus());
+                        response.getParsingError().ifPresent(e -> {
+                            log.error("Parsing Exception: ", e);
+                            log.error("Original body: " + e.getOriginalBody());
+                            log.info(String.valueOf(response.getStatus()));
+                        });
+                    });
+
+
 
         } catch (Exception e) {
             log.error(ERROR_TEXT + e.getMessage());
 
-            cityAsk();
+            TelegramBotService.cityAsk();
 
         }
 
-        return response.getBody().getObject();
 
+        return ref.r;
     }
+
 
     Location getLocationObject(String cityName) throws Exception {
        try {
@@ -124,7 +139,7 @@ public class WeatherService {
      * @param chatId Chat
 
      */
-    void sendCurrentWeather(Long chatId, String locationKey) {
+    String sendCurrentWeather(Long chatId, String locationKey) {
         TelegramBotService telegramBotService = new TelegramBotService(new BotConfig());
         try {
 
@@ -133,11 +148,12 @@ public class WeatherService {
             double temperature = currentWeather.getTemperatureCurrent().getTempMetricCurrent().getValue();
             String weatherText = getWeatherText(currentWeather, temperature);
 
-
-            telegramBotService.prepareAndSendMessage(chatId, weatherText);
+            return weatherText;
+            //telegramBotService.prepareAndSendMessage(chatId, weatherText);
         } catch(Exception e) {
             log.error(ERROR_TEXT + e.getMessage());
-            telegramBotService.prepareAndSendMessage(chatId, "weather_get_error");
+            return "weather_get_error";
+            //telegramBotService.prepareAndSendMessage(chatId, "weather_get_error");
         }
     }
 
