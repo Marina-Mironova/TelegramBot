@@ -26,12 +26,13 @@ public class ScheduledMessageService extends TelegramBotService{
 
     @Scheduled(cron = "${cron.scheduler}")
     private void sendScheduledMessages(){
+        SendMessageService sendMessageService = new SendMessageService();
         var scheduledMessages = scheduledMessagesRepository.findAll();
         var users = userRepository.findAll();
 
         for(ScheduledMessages schMessage: scheduledMessages) {
             for (User user: users){
-                prepareAndSendMessage(user.getChatId(), schMessage.getScheduledMessage());
+                sendMessageService.prepareAndSendMessage(user.getChatId(), schMessage.getScheduledMessage());
             }
         }
     }

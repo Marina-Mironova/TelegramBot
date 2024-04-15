@@ -62,7 +62,6 @@ public class WeatherService {
         } catch (Exception e) {
             log.error(ERROR_TEXT + e.getMessage());
 
-            TelegramBotService.cityAsk();
 
         }
 
@@ -139,20 +138,20 @@ public class WeatherService {
      * @param chatId Chat
 
      */
-    String sendCurrentWeather(Long chatId, String locationKey) {
-        TelegramBotService telegramBotService = new TelegramBotService(new BotConfig());
+    void sendCurrentWeather(Long chatId, String locationKey) {
+        SendMessageService sendMessageService = new SendMessageService();
         try {
 
-            CurrentWeather currentWeather = getCurrentWeather(locationKey);
+            CurrentWeather currentWeather = getCurrentWeather(getLocalisedNameString(new Location()));
 
             double temperature = currentWeather.getTemperatureCurrent().getTempMetricCurrent().getValue();
             String weatherText = getWeatherText(currentWeather, temperature);
 
-            return weatherText;
-            //telegramBotService.prepareAndSendMessage(chatId, weatherText);
+
+            sendMessageService.prepareAndSendMessage(chatId, weatherText);
         } catch(Exception e) {
             log.error(ERROR_TEXT + e.getMessage());
-            return "weather_get_error";
+            sendMessageService.prepareAndSendMessage(chatId, "weather_get_error");
             //telegramBotService.prepareAndSendMessage(chatId, "weather_get_error");
         }
     }
@@ -200,21 +199,21 @@ public class WeatherService {
     }
 
      void sendDailyWeather(Long chatId, String locationKey) {
-        TelegramBotService telegramBotService = new TelegramBotService(new BotConfig());
+        SendMessageService sendMessageService = new SendMessageService();
         try {
 
-            WeatherForecastOneDay dailyWeather = getDailyWeather(locationKey);
+            WeatherForecastOneDay dailyWeather = getDailyWeather(getLocalisedNameString(new Location()));
             for (DailyForecasts forecasts : dailyWeather.getDailyForecasts()) {
 
 
                 String weatherText = getWeatherText(forecasts);
 
 
-                telegramBotService.prepareAndSendMessage(chatId, weatherText);
+                sendMessageService.prepareAndSendMessage(chatId, weatherText);
             }
         } catch(Exception e) {
             log.error(ERROR_TEXT + e.getMessage());
-            telegramBotService.prepareAndSendMessage(chatId, "weather_get_error");
+            sendMessageService.prepareAndSendMessage(chatId, "weather_get_error");
         }
     }
 
@@ -250,7 +249,7 @@ public class WeatherService {
         sendDailyWeather(chatId, locationKey);
     }
 
-    //TODO посмотреть в видео Финашкина, как программируются действия кнопок при их нажатии
+
 }
 
 

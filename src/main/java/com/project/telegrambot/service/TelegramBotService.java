@@ -19,14 +19,20 @@ import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardRemove;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
+
+import static java.lang.Thread.sleep;
 
 
 @Slf4j
@@ -38,6 +44,10 @@ public class TelegramBotService extends TelegramLongPollingBot {
     @Autowired
     private UserRepository userRepository;
 
+    private ThreadLocal<Update> updateEvent = new ThreadLocal<>();
+
+    private SendMessageService sendMessageService = new SendMessageService();
+
 
 
     final BotConfig config;
@@ -46,6 +56,7 @@ public class TelegramBotService extends TelegramLongPollingBot {
 
     static final String YES_BUTTON = "YES_BUTTON";
     static final String NO_BUTTON = "NO_BUTTON";
+    static final String WEATHER_NOW = "weather now";
 
     static final String ERROR_TEXT = "Error occurred: ";
 
@@ -92,18 +103,18 @@ public class TelegramBotService extends TelegramLongPollingBot {
             String messageText = update.getMessage().getText();
             long chatId = update.getMessage().getChatId();
 
-            if(messageText.contains("/send") && config.getOwnerId() == chatId) {
+           /* if(messageText.contains("/send") && config.getOwnerId() == chatId) {
                 sendToAll(messageText);
             }
 
-            else {
+            else {*/
 
                 try {
                     menuBot(messageText, chatId, update);
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
-            }
+
         }
         else if(update.hasCallbackQuery()){
 
@@ -111,35 +122,27 @@ public class TelegramBotService extends TelegramLongPollingBot {
             String callbackData = update.getCallbackQuery().getData();
             long messageId = update.getCallbackQuery().getMessage().getMessageId();
             long chatId = update.getCallbackQuery().getMessage().getChatId();
-            WeatherService weather = new WeatherService();
 
-            cityAsk(chatId);
-            String userAnswer = cityUserAnswer(update);
-            if(userAnswer == null || userAnswer.isEmpty()){
-                cityAsk(chatId);
-            }
-            else {
-                Location location = null;
-                try {
-                    location = weather.getLocationObject(userAnswer);
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-                String locationKey = WeatherService.getLocationKeyString(location);
                 if(callbackData.equals("weather now")) {
-                    String text = weather.sendCurrentWeather(chatId, locationKey);
-                    executeEditMessageText(chatId, text, messageId);
-                   // weather.sendCurrentWeather(chatId, locationKey);
+                    try {
+                        currentWeatherCommand(chatId,update);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
 
                 } else if (callbackData.equals("weather forecast for 1 day")) {
 
-                    weather.sendDailyWeather(chatId, locationKey);
+                    try {
+                        dailyWeatherCommand(chatId, update);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
                 }
             }
 
 
 
-        }/*else if (update.hasCallbackQuery()) {
+        /*else if (update.hasCallbackQuery()) {
             String callbackData = update.getCallbackQuery().getData();
             long messageId = update.getCallbackQuery().getMessage().getMessageId();
             long chatId = update.getCallbackQuery().getMessage().getChatId();
@@ -217,28 +220,18 @@ public class TelegramBotService extends TelegramLongPollingBot {
         message.setChatId(String.valueOf(chatId));
         message.setText("Do you really want to register?");
 
-        InlineKeyboardMarkup markupInLine = new InlineKeyboardMarkup();
-        List<List<InlineKeyboardButton>> rowsInLine = new ArrayList<>();
-        List<InlineKeyboardButton> rowInLine = new ArrayList<>();
-        var yesButton = new InlineKeyboardButton();
-
-        yesButton.setText("Yes");
-        yesButton.setCallbackData(YES_BUTTON);
-
-        var noButton = new InlineKeyboardButton();
-
-        noButton.setText("No");
-        noButton.setCallbackData(NO_BUTTON);
-
-        rowInLine.add(yesButton);
-        rowInLine.add(noButton);
-
-        rowsInLine.add(rowInLine);
-
-        markupInLine.setKeyboard(rowsInLine);
-        message.setReplyMarkup(markupInLine);
+        InlineKeyboardService inlineKeyboardService = new InlineKeyboardService();
+        inlineKeyboardService.registerInlineKeyboard();
 
         executeMessage(message);
+    }
+    public void executeMessage(SendMessage message){
+        try {
+            execute(message);
+        }
+        catch (TelegramApiException e) {
+            log.error(ERROR_TEXT + e.getMessage());
+        }
     }
 
     private void registerUser(Message msg) {
@@ -260,98 +253,37 @@ public class TelegramBotService extends TelegramLongPollingBot {
         }
     }
 
-    private void startCommandReceived(long chatId, String name){
-
-        String answer = EmojiParser.parseToUnicode("Hi, " + name + ", nice to meet you!" + " :blush:");
-        log.info("Replied to user " + name);
-        sendMessage(chatId, answer);
-    }
 
     private void myDataCommand(long chatId, Message msg) {
 
       //  User chatId = User.getChatId();
         if(userRepository.findById(msg.getChatId()).isEmpty()){
             String  answer = "User is undefined. For registration choose 'start' command, please.";
-            sendMessage(chatId, answer);
+            sendMessageService.sendMessage(chatId, answer);
         }
         else {
             Optional<User> findChatId = userRepository.findById(chatId);
-            sendMessage(chatId, String.valueOf(msg.getChatId()) );  //TODO user data should be here
+            sendMessageService.sendMessage(chatId, String.valueOf(msg.getChatId()) );  //TODO user data should be here
 
         }
     }
 //TODO create method user data from msg.methods and chat.get... methods
-    private void sendMessage(long chatId, String textToSend) {
-        SendMessage message = new SendMessage();
-        message.setChatId(String.valueOf(chatId));
-        message.setText(textToSend);
-
-        ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup(); // TODO make this part as a new method
-        List<KeyboardRow> keyboardRows = new ArrayList<>();
-        KeyboardRow row = new KeyboardRow();
-
-        row.add("weather now");
-        row.add("weather forecast for 1 day");
-
-        keyboardRows.add(row);
-
-        row = new KeyboardRow();
 
 
-        keyboardRows.add(row);
-
-        keyboardMarkup.setKeyboard(keyboardRows);
-
-        message.setReplyMarkup(keyboardMarkup);
-
-
-        executeMessage(message);
-    }
-
-    private void executeEditMessageText(long chatId,String text, long messageId){
-        EditMessageText message = new EditMessageText();
-        message.setChatId(String.valueOf(chatId));
-        message.setText(text);
-        message.setMessageId((int) messageId);
-        try {
-            execute(message);
-        }
-        catch (TelegramApiException e) {
-            log.error(ERROR_TEXT + e.getMessage());
-        }
-    }
-
-    private void executeMessage(SendMessage message){
-        try {
-            execute(message);
-        }
-        catch (TelegramApiException e) {
-            log.error(ERROR_TEXT + e.getMessage());
-        }
-    }
-
-
-
-    void prepareAndSendMessage(Long chatId, String textToSend) {
-        SendMessage message = new SendMessage();
-        message.setChatId(String.valueOf(chatId));
-        message.setText(textToSend);
-        executeMessage(message);
-    }
-
-    public static String cityUserAnswer(Update update) {
+    public String cityUserAnswer(Update update) {
         if (update.hasMessage() && update.getMessage().hasText()) {
+            long chatId = update.getMessage().getChatId();
+            sendMessageService.prepareAndSendMessage(chatId, "Thank you!");
 
-          //  long chatId = update.getMessage().getChatId();
             return update.getMessage().getText();
         }
 
-        return null;
+     else  {  return null;}
     }
 
     public void cityAsk(long chatId){
         String text = "Please, write the name of the city.";
-        prepareAndSendMessage(chatId,text);
+        sendMessageService.prepareAndSendMessage(chatId,text);
     }
 
 
@@ -359,7 +291,7 @@ public class TelegramBotService extends TelegramLongPollingBot {
         var textToSend = EmojiParser.parseToUnicode(messageText.substring(messageText.indexOf(" ")));
         var users = userRepository.findAll();
         for (User user: users){
-            prepareAndSendMessage(user.getChatId(), textToSend);
+            sendMessageService.prepareAndSendMessage(user.getChatId(), textToSend);
         }
     }
 
@@ -368,12 +300,12 @@ public class TelegramBotService extends TelegramLongPollingBot {
             case "/start":
 
                 registerUser(update.getMessage());
-                startCommandReceived(chatId, update.getMessage().getChat().getFirstName());
+                sendMessageService.startCommandReceived(chatId, update.getMessage().getChat().getFirstName());
                 break;
 
             case "/help":
 
-                prepareAndSendMessage(chatId, HELP_TEXT);
+                sendMessageService.prepareAndSendMessage(chatId, HELP_TEXT);
                 break;
 
             case "/register":
@@ -398,9 +330,9 @@ public class TelegramBotService extends TelegramLongPollingBot {
 
                 break;
 
-            default:
+           /* default:
 
-                prepareAndSendMessage(chatId, "Sorry, command was not recognized");
+                prepareAndSendMessage(chatId, "Sorry, command was not recognized");*/
 
         }
 
@@ -427,9 +359,17 @@ public class TelegramBotService extends TelegramLongPollingBot {
 
     private void dailyWeatherCommand(long chatId, Update update) throws Exception {
         WeatherService weather = new WeatherService();
-
         cityAsk(chatId);
-        String userAnswer = cityUserAnswer(update);
+        sleep(50000);
+
+
+         String userAnswer =  sendMessageService.handleUpdate(update);
+         sendMessageService.prepareAndSendMessage(chatId, userAnswer);
+       // String userAnswer = getMessageText();
+        userAnswer = cityUserAnswer(update);
+        sendMessageService.prepareAndSendMessage(chatId, userAnswer);
+        userAnswer = getUserMessage(update);
+        sendMessageService.prepareAndSendMessage(chatId, userAnswer);
         if(userAnswer == null || userAnswer.isEmpty()){
             cityAsk(chatId);
         }
@@ -438,14 +378,22 @@ public class TelegramBotService extends TelegramLongPollingBot {
             String locationKey = WeatherService.getLocationKeyString(location);
             weather.sendDailyWeather(chatId, locationKey);
         }
+
     }
 
 
 
+    private String getUserMessage(Update update) throws TelegramApiException {
 
+        String chatId = update.getMessage().getChatId().toString();
+        String text = update.getMessage().getText();
 
-
-
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.setChatId(chatId);
+        sendMessage.setText("Your city: " + text);
+        this.execute(sendMessage);
+        return text;
+    }
 
 
 }
