@@ -139,7 +139,7 @@ public class WeatherService {
 
      */
     void sendCurrentWeather(Long chatId, String locationKey) {
-        SendMessageService sendMessageService = new SendMessageService();
+        TelegramBotService telegramBotService = new TelegramBotService(new BotConfig());
         try {
 
             CurrentWeather currentWeather = getCurrentWeather(getLocalisedNameString(new Location()));
@@ -148,10 +148,10 @@ public class WeatherService {
             String weatherText = getWeatherText(currentWeather, temperature);
 
 
-            sendMessageService.prepareAndSendMessage(chatId, weatherText);
+            telegramBotService.prepareAndSendMessage(chatId, weatherText);
         } catch(Exception e) {
             log.error(ERROR_TEXT + e.getMessage());
-            sendMessageService.prepareAndSendMessage(chatId, "weather_get_error");
+            telegramBotService.prepareAndSendMessage(chatId, "weather_get_error");
             //telegramBotService.prepareAndSendMessage(chatId, "weather_get_error");
         }
     }
@@ -199,7 +199,7 @@ public class WeatherService {
     }
 
      void sendDailyWeather(Long chatId, String locationKey) {
-        SendMessageService sendMessageService = new SendMessageService();
+        TelegramBotService telegramBotService = new TelegramBotService(new BotConfig());
         try {
 
             WeatherForecastOneDay dailyWeather = getDailyWeather(getLocalisedNameString(new Location()));
@@ -209,11 +209,11 @@ public class WeatherService {
                 String weatherText = getWeatherText(forecasts);
 
 
-                sendMessageService.prepareAndSendMessage(chatId, weatherText);
+                telegramBotService.prepareAndSendMessage(chatId, weatherText);
             }
         } catch(Exception e) {
             log.error(ERROR_TEXT + e.getMessage());
-            sendMessageService.prepareAndSendMessage(chatId, "weather_get_error");
+            telegramBotService.prepareAndSendMessage(chatId, "weather_get_error");
         }
     }
 

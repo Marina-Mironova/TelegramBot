@@ -77,7 +77,7 @@ public class TelegramBotService extends TelegramLongPollingBot {
 
         }
         catch (TelegramApiException e) {
-            System.out.println(e.getMessage()); // TODO log
+            log.error(e.getMessage());
         }
     }
 
@@ -259,11 +259,11 @@ public class TelegramBotService extends TelegramLongPollingBot {
       //  User chatId = User.getChatId();
         if(userRepository.findById(msg.getChatId()).isEmpty()){
             String  answer = "User is undefined. For registration choose 'start' command, please.";
-            sendMessageService.sendMessage(chatId, answer);
+            sendMessage(chatId, answer);
         }
         else {
             Optional<User> findChatId = userRepository.findById(chatId);
-            sendMessageService.sendMessage(chatId, String.valueOf(msg.getChatId()) );  //TODO user data should be here
+            sendMessage(chatId, String.valueOf(msg.getChatId()) );  //TODO user data should be here
 
         }
     }
@@ -273,7 +273,7 @@ public class TelegramBotService extends TelegramLongPollingBot {
     public String cityUserAnswer(Update update) {
         if (update.hasMessage() && update.getMessage().hasText()) {
             long chatId = update.getMessage().getChatId();
-            sendMessageService.prepareAndSendMessage(chatId, "Thank you!");
+            prepareAndSendMessage(chatId, "Thank you!");
 
             return update.getMessage().getText();
         }
@@ -283,7 +283,7 @@ public class TelegramBotService extends TelegramLongPollingBot {
 
     public void cityAsk(long chatId){
         String text = "Please, write the name of the city.";
-        sendMessageService.prepareAndSendMessage(chatId,text);
+        prepareAndSendMessage(chatId,text);
     }
 
 
@@ -291,7 +291,7 @@ public class TelegramBotService extends TelegramLongPollingBot {
         var textToSend = EmojiParser.parseToUnicode(messageText.substring(messageText.indexOf(" ")));
         var users = userRepository.findAll();
         for (User user: users){
-            sendMessageService.prepareAndSendMessage(user.getChatId(), textToSend);
+            prepareAndSendMessage(user.getChatId(), textToSend);
         }
     }
 
@@ -300,12 +300,12 @@ public class TelegramBotService extends TelegramLongPollingBot {
             case "/start":
 
                 registerUser(update.getMessage());
-                sendMessageService.startCommandReceived(chatId, update.getMessage().getChat().getFirstName());
+                startCommandReceived(chatId, update.getMessage().getChat().getFirstName());
                 break;
 
             case "/help":
 
-                sendMessageService.prepareAndSendMessage(chatId, HELP_TEXT);
+                prepareAndSendMessage(chatId, HELP_TEXT);
                 break;
 
             case "/register":
@@ -363,13 +363,13 @@ public class TelegramBotService extends TelegramLongPollingBot {
         sleep(50000);
 
 
-         String userAnswer =  sendMessageService.handleUpdate(update);
-         sendMessageService.prepareAndSendMessage(chatId, userAnswer);
+         String userAnswer =  handleUpdate(update);
+         prepareAndSendMessage(chatId, userAnswer);
        // String userAnswer = getMessageText();
         userAnswer = cityUserAnswer(update);
-        sendMessageService.prepareAndSendMessage(chatId, userAnswer);
+        prepareAndSendMessage(chatId, userAnswer);
         userAnswer = getUserMessage(update);
-        sendMessageService.prepareAndSendMessage(chatId, userAnswer);
+        prepareAndSendMessage(chatId, userAnswer);
         if(userAnswer == null || userAnswer.isEmpty()){
             cityAsk(chatId);
         }
@@ -394,6 +394,128 @@ public class TelegramBotService extends TelegramLongPollingBot {
         this.execute(sendMessage);
         return text;
     }
+
+    public void startCommandReceived(long chatId, String name){
+
+        String answer = EmojiParser.parseToUnicode("Hi, " + name + ", nice to meet you!" + " :blush:");
+        log.info("Replied to user " + name);
+        sendMessage(chatId, answer);
+    }
+
+    public void sendMessage(long chatId, String textToSend) {
+        KeyboardButtonService keyboardButtonService = new KeyboardButtonService();
+
+        SendMessage message = new SendMessage();
+        message.setChatId(String.valueOf(chatId));
+        message.setText(textToSend);
+        ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
+        //InlineKeyboardMarkup keyboardMarkup = new InlineKeyboardMarkup();
+        List<KeyboardRow> keyboardRows = new ArrayList<>();
+        KeyboardRow row = new KeyboardRow();
+
+        //var weatherNowButton = new KeyboardButton;
+
+        // weatherNowButton.setText("weather now");
+//weatherNowButton.setCallbackData(WEATHER_NOW);
+
+        row.add(WEATHER_NOW);
+        row.add("weather forecast for 1 day");
+
+        keyboardRows.add(row);
+
+        row = new KeyboardRow();
+
+
+        keyboardRows.add(row);
+
+        keyboardMarkup.setKeyboard(keyboardRows);
+
+        // message.setReplyMarkup(keyboardMarkup);
+        message.setReplyMarkup(keyboardMarkup);
+        // message.setReplyMarkup(keyboardMarkup);
+
+        executeMessage(message);
+    }
+
+    public SendMessage createMessage( String text) {
+        SendMessage message = new SendMessage();
+        message.setText(new String(text.getBytes(), StandardCharsets.UTF_8));
+        message.setParseMode("markdown");
+        Long chatId = getCurrentChatId();
+        message.setChatId(chatId);
+        return message;
+    }
+
+    public Long getCurrentChatId() {
+        if (updateEvent.get().hasMessage()) {
+            return updateEvent.get().getMessage().getFrom().getId();
+        }
+
+        if (updateEvent.get().hasCallbackQuery()) {
+            return updateEvent.get().getCallbackQuery().getFrom().getId();
+        }
+
+        return null;
+    }
+
+    public String getMessageText() {
+        return updateEvent.get().hasMessage() ? updateEvent.get().getMessage().getText() : "";
+    }
+
+    private void stopChat(long chatId) {
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.setChatId(chatId);
+        sendMessage.setText("Thank you for your interest to this bot. See you soon!\nPress /start to order again");
+        //chatStates.remove(chatId);
+        sendMessage.setReplyMarkup(new ReplyKeyboardRemove(true));
+        //   sender.execute(sendMessage);
+    }
+
+
+    public String handleUpdate(Update update) throws IOException, InterruptedException {
+        String messageText;
+        Long chatId;
+        String userFirstName = "";
+
+        //если сообщение пришло в лс боту
+        if (update.hasMessage()) {
+            chatId = update.getMessage().getChatId();
+            messageText = update.getMessage().getText().toUpperCase(Locale.ROOT).replace("/", "");
+            userFirstName = update.getMessage().getChat().getFirstName();
+            return messageText;
+        }
+
+
+
+        return "no city";
+    }
+
+
+    private void executeEditMessageText(long chatId,String text, long messageId){
+        EditMessageText message = new EditMessageText();
+        message.setChatId(String.valueOf(chatId));
+        message.setText(text);
+        message.setMessageId((int) messageId);
+        try {
+            execute(message);
+        }
+        catch (TelegramApiException e) {
+            log.error(ERROR_TEXT + e.getMessage());
+        }
+    }
+
+
+
+
+
+    public void prepareAndSendMessage(Long chatId, String textToSend) {
+        SendMessage message = new SendMessage();
+        message.setChatId(String.valueOf(chatId));
+        message.setText(textToSend);
+        executeMessage(message);
+    }
+
+
 
 
 }
