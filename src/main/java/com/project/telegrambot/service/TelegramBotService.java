@@ -4,6 +4,7 @@ import com.project.telegrambot.config.BotConfig;
 import com.project.telegrambot.dto.Location;
 import com.project.telegrambot.model.entities.User;
 import com.project.telegrambot.model.repositories.UserRepository;
+import com.project.telegrambot.utils.Action;
 import com.vdurmont.emoji.EmojiParser;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -17,20 +18,17 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardRemove;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButtonRequestUser;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
+import java.util.*;
 
 import static java.lang.Thread.sleep;
 
@@ -57,6 +55,7 @@ public class TelegramBotService extends TelegramLongPollingBot {
     static final String YES_BUTTON = "YES_BUTTON";
     static final String NO_BUTTON = "NO_BUTTON";
     static final String WEATHER_NOW = "weather now";
+    static final String WEATHER_DAILY = "weather forecast for 1 day";
 
     static final String ERROR_TEXT = "Error occurred: ";
 
@@ -65,12 +64,24 @@ public class TelegramBotService extends TelegramLongPollingBot {
 
 
         this.config = config;
+//        var actions = Map.of(
+//                "/start", new InfoAction(
+//                        List.of(
+//                                "/start - Команды бота",
+//                                "/echo - Ввод данных для команды",
+//                                "/new - Регистрация пользователя")
+//                ),
+//                "/echo", new EchoAction("/echo"),
+//                "/new", new NewCityAction()
+//        );
         List<BotCommand> listOfCommands = new ArrayList<>();
         listOfCommands.add(new BotCommand("/start", "register and get a welcome message"));
         listOfCommands.add(new BotCommand("/mydata", "get your data stored"));
         listOfCommands.add(new BotCommand("/help", "info how to use this bot"));
         listOfCommands.add(new BotCommand("/weathernow", "current weather"));
         listOfCommands.add(new BotCommand("/dailyweather", "weather info for the next day"));
+        listOfCommands.add(new BotCommand("/echo", "data typing for command"));
+        listOfCommands.add(new BotCommand("/set_city", "set city for the weather forecast"));
          //listOfCommands.add(new BotCommand("/stop", "stop sending new rss to you"));
         try{
             this.execute(new SetMyCommands(listOfCommands, new BotCommandScopeDefault(), null));
@@ -95,15 +106,51 @@ public class TelegramBotService extends TelegramLongPollingBot {
         return config.getToken();
     }
 
+    public Map<String, String> getBindingBy() {
+
+        return config.getBindingBy();
+    }
+
+
+    public Map<String, Action> getActions() {
+
+        return config.getActions();
+    }
+
+
+
 
     @Override
     public void onUpdateReceived(Update update) {
         // We check if the update has a message and the message has text
-        if (update.hasMessage() && update.getMessage().hasText()) {
+
+//        if (update.hasMessage()) {
+//            var key = update.getMessage().getText();
+//            var chatId = update.getMessage().getChatId().toString();
+//            if (getActions().containsKey(key)) {
+//                var msg = getActions().get(key).handle(update);
+//                getBindingBy().put(chatId, key);
+//                send(msg);
+//            } else if (getBindingBy().containsKey(chatId)) {
+//                var msg = getActions().get(getBindingBy().get(chatId)).callback(update);
+//                getBindingBy().remove(chatId);
+//                send(msg);
+//            }
+//        }
+//    }
+
+//    private void send(BotApiMethod msg) {
+//        try {
+//            execute(msg);
+//        } catch (TelegramApiException e) {
+//            e.printStackTrace();
+//        }
+//    }
+       if (update.hasMessage() && update.getMessage().hasText()) {
             String messageText = update.getMessage().getText();
             long chatId = update.getMessage().getChatId();
 
-           /* if(messageText.contains("/send") && config.getOwnerId() == chatId) {
+          /* if(messageText.contains("/send") && config.getOwnerId() == chatId) {
                 sendToAll(messageText);
             }
 
@@ -115,29 +162,10 @@ public class TelegramBotService extends TelegramLongPollingBot {
                     throw new RuntimeException(e);
                 }
 
+
+
         }
-        else if(update.hasCallbackQuery()){
 
-
-            String callbackData = update.getCallbackQuery().getData();
-            long messageId = update.getCallbackQuery().getMessage().getMessageId();
-            long chatId = update.getCallbackQuery().getMessage().getChatId();
-
-                if(callbackData.equals("weather now")) {
-                    try {
-                        currentWeatherCommand(chatId,update);
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-
-                } else if (callbackData.equals("weather forecast for 1 day")) {
-
-                    try {
-                        dailyWeatherCommand(chatId, update);
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                }
             }
 
 
@@ -211,7 +239,7 @@ public class TelegramBotService extends TelegramLongPollingBot {
 
 
 
-    }
+
 
 
 
@@ -254,7 +282,7 @@ public class TelegramBotService extends TelegramLongPollingBot {
     }
 
 
-    private void myDataCommand(long chatId, Message msg) {
+    private void myDataCommand(long chatId, Message msg) throws Exception {
 
       //  User chatId = User.getChatId();
         if(userRepository.findById(msg.getChatId()).isEmpty()){
@@ -330,13 +358,22 @@ public class TelegramBotService extends TelegramLongPollingBot {
 
                 break;
 
-           /* default:
+            case "/set_city":
+                String city = setCity(messageText, update);
+                break;
 
-                prepareAndSendMessage(chatId, "Sorry, command was not recognized");*/
+            default:
+
+                prepareAndSendMessage(chatId, "Sorry, command was not recognized");
 
         }
 
 
+
+    }
+
+    private String setCity(String messageText, Update update) throws TelegramApiException {
+        return getUserMessage(update);
     }
 
 
@@ -395,20 +432,36 @@ public class TelegramBotService extends TelegramLongPollingBot {
         return text;
     }
 
-    public void startCommandReceived(long chatId, String name){
+    public void startCommandReceived(long chatId, String name) throws Exception {
 
         String answer = EmojiParser.parseToUnicode("Hi, " + name + ", nice to meet you!" + " :blush:");
         log.info("Replied to user " + name);
         sendMessage(chatId, answer);
     }
 
-    public void sendMessage(long chatId, String textToSend) {
+    public void sendMessage(long chatId, String textToSend) throws Exception {
         KeyboardButtonService keyboardButtonService = new KeyboardButtonService();
 
         SendMessage message = new SendMessage();
         message.setChatId(String.valueOf(chatId));
         message.setText(textToSend);
+        ReplyKeyboardMarkup keyboardMarkup = getReplyKeyboardMarkup();
+
+        // message.setReplyMarkup(keyboardMarkup);
+        message.setReplyMarkup(keyboardMarkup);
+        // message.setReplyMarkup(keyboardMarkup);
+
+        executeMessage(message);
+//        if (KeyboardButtonRequestUser.builder().toString().equals(WEATHER_NOW)){
+//            currentWeatherCommand(chatId, new Update());
+//        }
+    }
+
+    private static ReplyKeyboardMarkup getReplyKeyboardMarkup() {
         ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
+        keyboardMarkup.setSelective(true);
+        keyboardMarkup.setResizeKeyboard(true);
+        keyboardMarkup.setOneTimeKeyboard(false);
         //InlineKeyboardMarkup keyboardMarkup = new InlineKeyboardMarkup();
         List<KeyboardRow> keyboardRows = new ArrayList<>();
         KeyboardRow row = new KeyboardRow();
@@ -418,8 +471,8 @@ public class TelegramBotService extends TelegramLongPollingBot {
         // weatherNowButton.setText("weather now");
 //weatherNowButton.setCallbackData(WEATHER_NOW);
 
-        row.add(WEATHER_NOW);
-        row.add("weather forecast for 1 day");
+        row.add(new KeyboardButton(WEATHER_NOW));
+        row.add(new KeyboardButton(WEATHER_DAILY));
 
         keyboardRows.add(row);
 
@@ -429,12 +482,7 @@ public class TelegramBotService extends TelegramLongPollingBot {
         keyboardRows.add(row);
 
         keyboardMarkup.setKeyboard(keyboardRows);
-
-        // message.setReplyMarkup(keyboardMarkup);
-        message.setReplyMarkup(keyboardMarkup);
-        // message.setReplyMarkup(keyboardMarkup);
-
-        executeMessage(message);
+        return keyboardMarkup;
     }
 
     public SendMessage createMessage( String text) {

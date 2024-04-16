@@ -19,7 +19,6 @@ public class NewCityAction implements Action {
         var msg = update.getMessage();
         var chatId = msg.getChatId().toString();
         var city = msg.getText();
-        // userRepository.save(new User(email));
         var text = "Your chosen city is: " + city;
         return new SendMessage(chatId, text);
     }

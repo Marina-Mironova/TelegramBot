@@ -64,4 +64,28 @@ public class InlineKeyboardService {
         markupInLine.setKeyboard(rowsInLine);
         message.setReplyMarkup(markupInLine);
     }
+
+    private void setInlineCities() {
+        InlineKeyboardMarkup markupInLine = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> rowsInLine = new ArrayList<>();
+        List<InlineKeyboardButton> rowInLine = new ArrayList<>();
+        var button1 = new InlineKeyboardButton();
+
+        button1.setText("Velten");
+        button1.setCallbackData("Velten");
+
+        var button2 = new InlineKeyboardButton();
+
+        button2.setText("Berlin");
+        button2.setCallbackData("Berlin");
+
+        rowInLine.add(button1);
+        rowInLine.add(button2);
+
+        rowsInLine.add(rowInLine);
+
+        markupInLine.setKeyboard(rowsInLine);
+        message.setReplyMarkup(markupInLine);
+    }
+
 }
