@@ -10,7 +10,6 @@ import kong.unirest.core.json.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.sql.Update;
 import org.springframework.stereotype.Service;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 
 import static com.project.telegrambot.service.TelegramBotService.ERROR_TEXT;
 
@@ -27,53 +26,34 @@ public class WeatherService {
 
     final String WEATHER_URL_DAILY = new WeatherMain().getACCU_WEATHER_URL_DAILY();
 
- /*   public WeatherService(BotConfig config) {
-        super(config);
+
+
+
+
+
+ public JSONObject locationRequest(String cityName) {
+
+    try {
+
+     HttpResponse<JsonNode> response = Unirest.get(LOCATION_URL)
+             .queryString("apiKey", API_KEY)
+             .queryString("q", cityName)
+             .asJson();
+     return response.getBody().getObject();
+
+    } catch (NullPointerException e) {
+        log.error("Null pointer exception error " +e.getMessage());
+        throw e;
     }
-*/
 
-
-
-    JSONObject locationRequest(String cityName) {
-        var ref = new Object() {
-            JSONObject r;
-        };
-        try {
-            Unirest.get(LOCATION_URL)
-                    .queryString("apiKey", API_KEY)
-                    .queryString("q", cityName)
-                    .asJson()
-                    .ifSuccess(response -> {
-                        log.info("location request was successful");
-                        ref.r = response.getBody().getObject();
-                       log.info(String.valueOf(response.getStatus()));
-                    })
-                    .ifFailure(response -> {
-                        log.error("Oh No! Status" + response.getStatus());
-                        response.getParsingError().ifPresent(e -> {
-                            log.error("Parsing Exception: ", e);
-                            log.error("Original body: " + e.getOriginalBody());
-                            log.info(String.valueOf(response.getStatus()));
-                        });
-                    });
-
-
-
-        } catch (Exception e) {
-            log.error(ERROR_TEXT + e.getMessage());
-
-
-        }
-
-
-        return ref.r;
-    }
+ }
 
 
     Location getLocationObject(String cityName) throws Exception {
        try {
-       JSONObject locationObject = locationRequest(cityName);
-       Location location = JsonUtil.toObject(locationObject, Location.class);
+       JSONObject locationObject =locationRequest(cityName);
+      Location location = JsonUtil.toObject(locationObject, Location.class);
+        //   Location location = locationRequest(cityName);//.getBody();// если сделать, чтобы предыдущий метод выводил тем же способом локацию, то этот будет уже не нужен
        if(location == null) {
            throw new Exception("Cannot parse location");
        }
