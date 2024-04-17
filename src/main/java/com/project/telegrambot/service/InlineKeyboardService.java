@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 
 import java.nio.charset.StandardCharsets;
@@ -65,7 +66,7 @@ public class InlineKeyboardService {
         message.setReplyMarkup(markupInLine);
     }
 
-    public void setInlineCities() {
+    public ReplyKeyboard setInlineCities() {
         InlineKeyboardMarkup markupInLine = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rowsInLine = new ArrayList<>();
         List<InlineKeyboardButton> rowInLine = new ArrayList<>();
@@ -85,7 +86,8 @@ public class InlineKeyboardService {
         rowsInLine.add(rowInLine);
 
         markupInLine.setKeyboard(rowsInLine);
-        message.setReplyMarkup(markupInLine);
+
+        return markupInLine;
     }
 
 }

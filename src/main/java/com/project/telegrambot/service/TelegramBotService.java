@@ -1,6 +1,7 @@
 package com.project.telegrambot.service;
 
 import com.project.telegrambot.config.BotConfig;
+import com.project.telegrambot.dto.Location;
 import com.project.telegrambot.model.entities.User;
 import com.project.telegrambot.model.repositories.UserRepository;
 import com.vdurmont.emoji.EmojiParser;
@@ -16,6 +17,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -43,6 +45,7 @@ public class TelegramBotService extends TelegramLongPollingBot {
 
     static final String YES_BUTTON = "YES_BUTTON";
     static final String NO_BUTTON = "NO_BUTTON";
+    String CALLBACK_CITY = null;
 
     static final String ERROR_TEXT = "Error occurred: ";
 
@@ -97,8 +100,34 @@ public class TelegramBotService extends TelegramLongPollingBot {
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
+        } else if(update.hasCallbackQuery()){
+
+            String callbackData = update.getCallbackQuery().getData();
+            long chatId = update.getCallbackQuery().getMessage().getChatId();
+
+            if(callbackData.equals("Velten")) {
+                prepareAndSendMessage(chatId, "Your city is " + callbackData);
+                CALLBACK_CITY = callbackData;
+                prepareAndSendMessage(chatId, "Now I prepare the weather forecast for you. City: " + CALLBACK_CITY + ". Please wait.");
+
+               // var joke = getRandomJoke();
+
+                //joke.ifPresent(randomJoke -> addButtonAndSendMessage(randomJoke.getBody(), chatId));
+
+               // joke.ifPresent(randomJoke -> addButtonAndEditText(randomJoke.getBody(), chatId, update.getCallbackQuery().getMessage().getMessageId()));
+
+            }
+            if(callbackData.equals("Berlin")) {
+                prepareAndSendMessage(chatId, "Your city is " + callbackData);
+                CALLBACK_CITY = callbackData;
+                prepareAndSendMessage(chatId, "Now I prepare the weather forecast for you. City: " + CALLBACK_CITY + ". Please wait.");
+
+            }
+
         }
-    }
+
+        }
+
 
 
     private void registerUser(Message msg) {
@@ -156,24 +185,18 @@ public class TelegramBotService extends TelegramLongPollingBot {
 
             case "/weathernow":
                 prepareAndSendMessage(chatId, "Here is weather for today.");
-                //  joke.ifPresent(randomJoke -> sendMessage(chatId, ));
-                //  String callbackData = update.getCallbackQuery().getData();
-//long chatId = update.getCallbackQuery().getMessage().getChatId();
-                // cityChoose(chatId);
-//callbackDataCityChoose(update);
+                cityChoose(chatId);
 
-                //currentWeatherCommand(chatId, update);
+                currentWeatherCommand(chatId, CALLBACK_CITY);
 
                 break;
 
             case "/dailyweather":
 
                 prepareAndSendMessage(chatId, "Here is weather for tomorrow.");
+                cityChoose(chatId);
 
-                //callbackData = update.getCallbackQuery().getData();
-                //chatId1 = update.getCallbackQuery().getMessage().getChatId();
-
-                // dailyWeatherCommand(chatId, update);
+                dailyWeatherCommand(chatId, CALLBACK_CITY);
 
                 break;
 
@@ -183,10 +206,14 @@ public class TelegramBotService extends TelegramLongPollingBot {
 
             case "weather now":
                 prepareAndSendMessage(chatId, "Here is weather for today.");
+                cityChoose(chatId);
+                currentWeatherCommand(chatId, CALLBACK_CITY);
                 break;
 
-            case "weather forecast for 1 day":
+            case "weather for 1 day":
                 prepareAndSendMessage(chatId, "Here is weather for tomorrow.");
+                cityChoose(chatId);
+                dailyWeatherCommand(chatId, CALLBACK_CITY);
                 break;
 
             default:
@@ -215,7 +242,7 @@ public class TelegramBotService extends TelegramLongPollingBot {
         sendMessage(chatId, answer);
     }
 
-    public void sendMessage(long chatId, String textToSend) throws Exception {
+    public void sendMessage(long chatId, String textToSend) {
 
         SendMessage message = new SendMessage();
         message.setChatId(String.valueOf(chatId));
@@ -224,5 +251,33 @@ public class TelegramBotService extends TelegramLongPollingBot {
 
         message.setReplyMarkup(keyboardMarkup);
         executeMessage(message);
+    }
+
+    private void cityChoose(long chatId) {
+        SendMessage message = new SendMessage();
+        message.setChatId(String.valueOf(chatId));
+        message.setText("Which city do you need?");
+
+        InlineKeyboardService inlineKeyboardService = new InlineKeyboardService();
+       ReplyKeyboard markupInLine = inlineKeyboardService.setInlineCities();
+        message.setReplyMarkup(markupInLine);
+        executeMessage(message);
+    }
+
+    private void currentWeatherCommand(long chatId, String userAnswer) throws Exception {
+        WeatherService weather = new WeatherService();
+        Location location = weather.getLocationObject(userAnswer);
+        String locationKey = WeatherService.getLocationKeyString(location);
+        weather.sendCurrentWeather(chatId, locationKey);
+
+
+
+    }
+
+    private void dailyWeatherCommand(long chatId, String userAnswer) throws Exception {
+        WeatherService weather = new WeatherService();
+        Location location = weather.getLocationObject(userAnswer);
+        String locationKey = WeatherService.getLocationKeyString(location);
+        weather.sendDailyWeather(chatId, locationKey);
     }
 }
