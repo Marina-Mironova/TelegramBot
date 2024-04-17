@@ -65,7 +65,7 @@ public class InlineKeyboardService {
         message.setReplyMarkup(markupInLine);
     }
 
-    private void setInlineCities() {
+    public void setInlineCities() {
         InlineKeyboardMarkup markupInLine = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rowsInLine = new ArrayList<>();
         List<InlineKeyboardButton> rowInLine = new ArrayList<>();

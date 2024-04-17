@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Locale;
 
 import static com.project.telegrambot.service.TelegramBotService.ERROR_TEXT;
-import static com.project.telegrambot.service.TelegramBotService.WEATHER_NOW;
+//import static com.project.telegrambot.service.TelegramBotService.WEATHER_NOW;
 
 @Slf4j
 @Data
