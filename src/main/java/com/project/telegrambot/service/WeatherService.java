@@ -20,18 +20,45 @@ import static com.project.telegrambot.service.TelegramBotService.ERROR_TEXT;
 @Slf4j
 public class WeatherService {
 
-    final String LOCATION_URL = new WeatherMain().getACCU_WEATHER_LOCATION_URL();
-    final String API_KEY = new WeatherMain().getACCU_WEATHER_API_KEY();
-    final String WEATHER_URL_NOW = new WeatherMain().getACCU_WEATHER_URL_NOW();
+    //final WeatherMain weatherMain = new WeatherMain();
 
-    final String WEATHER_URL_DAILY = new WeatherMain().getACCU_WEATHER_URL_DAILY();
+    private String LOCATION_URL = "http://dataservice.accuweather.com/locations/v1/cities/autocomplete";// weatherMain.getACCU_WEATHER_LOCATION_URL();
+    private String API_KEY = "Rjr1HRBdhAMmGhoPPD1V36xrmx30Cpjw"; ;//weatherMain.getACCU_WEATHER_API_KEY();
+    private String WEATHER_URL_NOW = "http://dataservice.accuweather.com/currentconditions/v1/{locationKey}" ;//weatherMain.getACCU_WEATHER_URL_NOW();
+
+    private String WEATHER_URL_DAILY = " http://dataservice.accuweather.com/forecasts/v1/daily/1day/{locationKey}";//weatherMain.getACCU_WEATHER_URL_DAILY();
+
+//    public WeatherMain getWeatherMain() {
+//         return this.weatherMain;
+//
+//    }
 
 
+//    public String getACCU_WEATHER_LOCATION_URL() {
+//
+//        return weatherMain.getACCU_WEATHER_LOCATION_URL();
+//    }
 
 
+//    public String getgetACCU_WEATHER_API_KEY() {
+//
+//        return weatherMain.getACCU_WEATHER_API_KEY();
+//    }
 
 
- public JSONObject locationRequest(String cityName) {
+//    public String getACCU_WEATHER_URL_DAILY() {
+//
+//        return weatherMain.getACCU_WEATHER_URL_DAILY();
+//    }
+//
+//
+//    public String getACCU_WEATHER_URL_NOW() {
+//
+//        return weatherMain.getACCU_WEATHER_URL_NOW();
+//    }
+
+
+    public JSONObject locationRequest(String cityName) {
 
     try {
 
