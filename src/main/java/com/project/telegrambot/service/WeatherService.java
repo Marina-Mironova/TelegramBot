@@ -58,14 +58,19 @@ public class WeatherService {
 //    }
 
 
-    public JSONObject locationRequest(String cityName) {
+    public JSONObject locationRequest(String cityName) { // TODO: исправить. Криво строится ссылка, не видит API_KEY
 
     try {
 
      HttpResponse<JsonNode> response = Unirest.get(LOCATION_URL)
-             .queryString("apiKey", API_KEY)
-             .queryString("q", cityName)
+            .queryString("apiKey", API_KEY)
+//             .queryString("q", cityName)
              .asJson();
+
+        String body = Unirest.get(LOCATION_URL)
+                .asString()
+                .getBody();
+
      return response.getBody().getObject();
 
     } catch (NullPointerException e) {

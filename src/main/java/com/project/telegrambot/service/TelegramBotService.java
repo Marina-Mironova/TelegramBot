@@ -5,6 +5,7 @@ import com.project.telegrambot.dto.Location;
 import com.project.telegrambot.model.entities.User;
 import com.project.telegrambot.model.repositories.UserRepository;
 import com.vdurmont.emoji.EmojiParser;
+import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -25,6 +26,7 @@ import java.util.List;
 
 import static com.project.telegrambot.service.KeyboardButtonService.getReplyKeyboardMarkup;
 
+@Data
 @Slf4j
 @Component
 public class TelegramBotService extends TelegramLongPollingBot {
@@ -99,10 +101,16 @@ public class TelegramBotService extends TelegramLongPollingBot {
             String callbackData = update.getCallbackQuery().getData();
             long chatId = update.getCallbackQuery().getMessage().getChatId();
 
-            if (callbackData.equals("Velten")) {
+            if (callbackData.equals("Velten")) { // TODO: внести изменения для разных погодных команд
                 prepareAndSendMessage(chatId, "Your city is " + callbackData);
                 CALLBACK_CITY = callbackData;
                 prepareAndSendMessage(chatId, "Now I prepare the weather forecast for you. City: " + CALLBACK_CITY + ". Please wait.");
+                prepareAndSendMessage(chatId, "The city is " + CALLBACK_CITY);
+                try {
+                    currentWeatherCommand(chatId, CALLBACK_CITY);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
 
                 // var joke = getRandomJoke();
 
@@ -115,7 +123,11 @@ public class TelegramBotService extends TelegramLongPollingBot {
                 prepareAndSendMessage(chatId, "Your city is " + callbackData);
                 CALLBACK_CITY = callbackData;
                 prepareAndSendMessage(chatId, "Now I prepare the weather forecast for you. City: " + CALLBACK_CITY + ". Please wait.");
-
+                try {
+                    currentWeatherCommand(chatId, CALLBACK_CITY);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
             }
 
         }
@@ -180,7 +192,8 @@ public class TelegramBotService extends TelegramLongPollingBot {
                 prepareAndSendMessage(chatId, "Here is weather for today.");
                 cityChoose(chatId);
 
-                currentWeatherCommand(chatId, CALLBACK_CITY);
+//                    prepareAndSendMessage(chatId, "The city is " + CALLBACK_CITY);
+//                    currentWeatherCommand(chatId, CALLBACK_CITY);
 
                 break;
 
@@ -189,7 +202,7 @@ public class TelegramBotService extends TelegramLongPollingBot {
                 prepareAndSendMessage(chatId, "Here is weather for tomorrow.");
                 cityChoose(chatId);
 
-                dailyWeatherCommand(chatId, CALLBACK_CITY);
+          //      dailyWeatherCommand(chatId, CALLBACK_CITY);
 
                 break;
 
@@ -200,13 +213,15 @@ public class TelegramBotService extends TelegramLongPollingBot {
             case "weather now":
                 prepareAndSendMessage(chatId, "Here is weather for today.");
                 cityChoose(chatId);
-                currentWeatherCommand(chatId, CALLBACK_CITY);
+
+            //    prepareAndSendMessage(chatId, "The city is " + CALLBACK_CITY);
+          //      currentWeatherCommand(chatId, CALLBACK_CITY);
                 break;
 
             case "weather for 1 day":
                 prepareAndSendMessage(chatId, "Here is weather for tomorrow.");
                 cityChoose(chatId);
-                dailyWeatherCommand(chatId, CALLBACK_CITY);
+              //  dailyWeatherCommand(chatId, CALLBACK_CITY);
                 break;
 
             default:
@@ -273,90 +288,8 @@ public class TelegramBotService extends TelegramLongPollingBot {
         weather.sendDailyWeather(chatId, locationKey);
     }
 
-    public UserRepository getUserRepository() {
-        return this.userRepository;
-    }
-
-    public BotConfig getConfig() {
-        return this.config;
-    }
-
-    public String getCALLBACK_CITY() {
-        return this.CALLBACK_CITY;
-    }
-
-    public List<Message> getSendMessages() {
-        return this.sendMessages;
-    }
-
-    public ThreadLocal<Update> getUpdateEvent() {
-        return this.updateEvent;
-    }
-
-    public void setUserRepository(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
-
-    public void setCALLBACK_CITY(String CALLBACK_CITY) {
-        this.CALLBACK_CITY = CALLBACK_CITY;
-    }
-
-    public void setSendMessages(List<Message> sendMessages) {
-        this.sendMessages = sendMessages;
-    }
-
-    public void setUpdateEvent(ThreadLocal<Update> updateEvent) {
-        this.updateEvent = updateEvent;
-    }
-
-    public boolean equals(final Object o) {
-        if (o == this) return true;
-        if (!(o instanceof TelegramBotService)) return false;
-        final TelegramBotService other = (TelegramBotService) o;
-        if (!other.canEqual((Object) this)) return false;
-        final Object this$userRepository = this.getUserRepository();
-        final Object other$userRepository = other.getUserRepository();
-        if (this$userRepository == null ? other$userRepository != null : !this$userRepository.equals(other$userRepository))
-            return false;
-        final Object this$config = this.getConfig();
-        final Object other$config = other.getConfig();
-        if (this$config == null ? other$config != null : !this$config.equals(other$config)) return false;
-        final Object this$CALLBACK_CITY = this.getCALLBACK_CITY();
-        final Object other$CALLBACK_CITY = other.getCALLBACK_CITY();
-        if (this$CALLBACK_CITY == null ? other$CALLBACK_CITY != null : !this$CALLBACK_CITY.equals(other$CALLBACK_CITY))
-            return false;
-        final Object this$sendMessages = this.getSendMessages();
-        final Object other$sendMessages = other.getSendMessages();
-        if (this$sendMessages == null ? other$sendMessages != null : !this$sendMessages.equals(other$sendMessages))
-            return false;
-        final Object this$updateEvent = this.getUpdateEvent();
-        final Object other$updateEvent = other.getUpdateEvent();
-        if (this$updateEvent == null ? other$updateEvent != null : !this$updateEvent.equals(other$updateEvent))
-            return false;
-        return true;
-    }
-
     protected boolean canEqual(final Object other) {
         return other instanceof TelegramBotService;
     }
 
-    public int hashCode() {
-        final int PRIME = 59;
-        int result = 1;
-        final Object $userRepository = this.getUserRepository();
-        result = result * PRIME + ($userRepository == null ? 43 : $userRepository.hashCode());
-        final Object $config = this.getConfig();
-        result = result * PRIME + ($config == null ? 43 : $config.hashCode());
-        final Object $CALLBACK_CITY = this.getCALLBACK_CITY();
-        result = result * PRIME + ($CALLBACK_CITY == null ? 43 : $CALLBACK_CITY.hashCode());
-        final Object $sendMessages = this.getSendMessages();
-        result = result * PRIME + ($sendMessages == null ? 43 : $sendMessages.hashCode());
-        final Object $updateEvent = this.getUpdateEvent();
-        result = result * PRIME + ($updateEvent == null ? 43 : $updateEvent.hashCode());
-        return result;
-    }
-
-    public String toString() {
-        return "TelegramBotService(userRepository=" + this.getUserRepository() + ", config=" + this.getConfig() + ", CALLBACK_CITY=" + this.getCALLBACK_CITY() + ", sendMessages=" + this.getSendMessages() + ", updateEvent=" + this.getUpdateEvent() + ")";
-    }
 }
