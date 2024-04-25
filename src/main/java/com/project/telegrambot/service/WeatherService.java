@@ -1,5 +1,6 @@
 package com.project.telegrambot.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.telegrambot.config.BotConfig;
 import com.project.telegrambot.controller.JsonUtil;
 import com.project.telegrambot.dto.*;
@@ -10,6 +11,9 @@ import kong.unirest.core.json.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.sql.Update;
 import org.springframework.stereotype.Service;
+
+import java.io.DataInput;
+import java.util.List;
 
 import static com.project.telegrambot.service.TelegramBotService.ERROR_TEXT;
 
@@ -58,20 +62,27 @@ public class WeatherService {
 //    }
 
 
-    public JSONObject locationRequest(String cityName) { // TODO: исправить. Криво строится ссылка, не видит API_KEY
+    public JsonNode locationRequest(String cityName) { // TODO: исправить. Криво строится ссылка, не видит API_KEY
 
     try {
 
-     HttpResponse<JsonNode> response = Unirest.get(LOCATION_URL)
-            .queryString("apiKey", API_KEY)
+//     HttpResponse<JsonNode> response = Unirest.get(LOCATION_URL)
+//            .queryString("apiKey", API_KEY)
 //             .queryString("q", cityName)
-             .asJson();
-
-        String body = Unirest.get(LOCATION_URL)
-                .asString()
-                .getBody();
-
-     return response.getBody().getObject();
+//             .asJson();
+//    String stringResponse = Unirest.get(LOCATION_URL)
+//            .queryString("apiKey", API_KEY)
+//            .queryString("q", cityName)
+//            .asString().getBody();
+//        String responseStatus = response.getStatusText();
+//        String string = response.toString();
+//
+//
+        HttpResponse<JsonNode> response = Unirest.get("http://dataservice.accuweather.com/locations/v1/cities/autocomplete?apikey=Rjr1HRBdhAMmGhoPPD1V36xrmx30Cpjw&q=Velten").asJson();
+        String stringStratus = response.getStatusText();
+        HttpResponse<String> responseString = Unirest.get("http://dataservice.accuweather.com/locations/v1/cities/autocomplete?apikey=Rjr1HRBdhAMmGhoPPD1V36xrmx30Cpjw&q=Velten").asString();
+        String string = responseString.getBody();
+        return response.getBody();
 
     } catch (NullPointerException e) {
         log.error("Null pointer exception error " +e.getMessage());
@@ -81,32 +92,60 @@ public class WeatherService {
  }
 
 
-    Location getLocationObject(String cityName) throws Exception {
-       try {
-       JSONObject locationObject =locationRequest(cityName);
-      Location location = JsonUtil.toObject(locationObject, Location.class);
-        //   Location location = locationRequest(cityName);//.getBody();// если сделать, чтобы предыдущий метод выводил тем же способом локацию, то этот будет уже не нужен
-       if(location == null) {
+    JSONObject getLocationObjectList(String cityName) throws Exception {
+        try{
+        //ObjectMapper objectMapper = new ObjectMapper();
+        JSONObject json = new JSONObject(locationRequest(cityName));
+        JSONObject locationObject = json.getJSONArray("location").getJSONObject(0);
+       // List<LocationAuto> locationList = objectMapper.readValue(locationObject.toString(), objectMapper.getTypeFactory().constructCollectionType(List.class, LocationAuto.class));
+
+        // Выводим результаты
+//        log.info("List of Users:");
+//        for (LocationAuto location : locationList) {
+//            log.info(String.valueOf(location));
+//        }
+
+              if(locationObject == null) {
            throw new Exception("Cannot parse location");
        }
-       return location;
+            return locationObject;
+
        } catch(Exception e) {
            log.error(ERROR_TEXT + e.getMessage()+"Cannot get weather data");
            throw e;
        }
+//       try {
+//       JsonNode locationObject =locationRequest(cityName);
+//       List<LocationAuto> location = JsonUtil.toObject(locationObject.getObject(), LocationAuto.class);
+//        //   Location location = locationRequest(cityName);//.getBody();// если сделать, чтобы предыдущий метод выводил тем же способом локацию, то этот будет уже не нужен
+//       if(location == null) {
+//           throw new Exception("Cannot parse location");
+//       }
+//       return location;
+//       } catch(Exception e) {
+//           log.error(ERROR_TEXT + e.getMessage()+"Cannot get weather data");
+//           throw e;
+//       }
 
 
    }
 
-    static String getLocationKeyString(Location location) {
-        String locationKey = String.format(location.getLocationKey());
+   JSONObject getLocationObject(String cityName) throws Exception {
+        JSONObject location = getLocationObjectList(cityName);
+        return location;
+   }
+
+    String getLocationKeyString(String cityName) throws Exception {
+        JSONObject location = getLocationObject(cityName);
+        String locationKey = location.getString("Key");
 
 
         return locationKey;
     }
-     static String getLocalisedNameString(Location location) {
-
-        String localisedName = String.format(location.getLocalisedName());
+    String getLocalisedNameString(String cityName) throws Exception {
+         JSONObject location = getLocationObject(cityName);
+         String localisedName = location.getString("LocalizedName");
+        //String localisedName = String.format(location.getLocalisedName());
 
         return localisedName;
     }
@@ -130,8 +169,8 @@ public class WeatherService {
     private CurrentWeather getCurrentWeather(String cityName) throws Exception {
 
         try {
-            String localisedName = getLocalisedNameString(getLocationObject(cityName));
-            JSONObject weatherObject = getCurrentWeatherObject(getLocationKeyString(getLocationObject(localisedName)));
+            String localisedName = getLocalisedNameString(cityName);
+            JSONObject weatherObject = getCurrentWeatherObject(getLocationKeyString(localisedName));
             CurrentWeather weather = JsonUtil.toObject(weatherObject, CurrentWeather.class);
             if(weather == null) {
                 throw new Exception("Cannot parse weather");
@@ -150,11 +189,11 @@ public class WeatherService {
      * @param chatId Chat
 
      */
-    void sendCurrentWeather(Long chatId, String locationKey) {
+    void sendCurrentWeather(Long chatId, String cityName) {
         TelegramBotService telegramBotService = new TelegramBotService(new BotConfig());
         try {
 
-            CurrentWeather currentWeather = getCurrentWeather(getLocalisedNameString(new Location()));
+            CurrentWeather currentWeather = getCurrentWeather(getLocalisedNameString(cityName));
 
             double temperature = currentWeather.getTemperatureCurrent().getTempMetricCurrent().getValue();
             String weatherText = getWeatherText(currentWeather, temperature);
@@ -197,8 +236,8 @@ public class WeatherService {
 
     private WeatherForecastOneDay getDailyWeather(String cityName) throws Exception {
         try {
-            String localisedName = getLocalisedNameString(getLocationObject(cityName));
-            JSONObject weatherObject = getDailyWeatherObject(getLocationKeyString(getLocationObject(localisedName)));
+            String localisedName = getLocalisedNameString((cityName));
+            JSONObject weatherObject = getDailyWeatherObject(getLocationKeyString((localisedName)));
             WeatherForecastOneDay weather = JsonUtil.toObject(weatherObject, WeatherForecastOneDay.class);
             if(weather == null) {
                 throw new Exception("Cannot parse weather");
@@ -210,11 +249,11 @@ public class WeatherService {
         }
     }
 
-     void sendDailyWeather(Long chatId, String locationKey) {
+     void sendDailyWeather(Long chatId, String cityName) {
         TelegramBotService telegramBotService = new TelegramBotService(new BotConfig());
         try {
 
-            WeatherForecastOneDay dailyWeather = getDailyWeather(getLocalisedNameString(new Location()));
+            WeatherForecastOneDay dailyWeather = getDailyWeather(getLocalisedNameString(cityName));
             for (DailyForecasts forecasts : dailyWeather.getDailyForecasts()) {
 
 

@@ -274,18 +274,18 @@ public class TelegramBotService extends TelegramLongPollingBot {
 
     private void currentWeatherCommand(long chatId, String userAnswer) throws Exception {
         WeatherService weather = new WeatherService();
-        Location location = weather.getLocationObject(userAnswer);
-        String locationKey = WeatherService.getLocationKeyString(location);
-        weather.sendCurrentWeather(chatId, locationKey);
+        //Location location = weather.getLocationObject(userAnswer);
+       // String locationKey = WeatherService.getLocationKeyString(location);
+        weather.sendCurrentWeather(chatId, userAnswer);
 
 
     }
 
     private void dailyWeatherCommand(long chatId, String userAnswer) throws Exception {
         WeatherService weather = new WeatherService();
-        Location location = weather.getLocationObject(userAnswer);
-        String locationKey = WeatherService.getLocationKeyString(location);
-        weather.sendDailyWeather(chatId, locationKey);
+        //Location location = weather.getLocationObject(userAnswer);
+        //String locationKey = WeatherService.getLocationKeyString(location);
+        weather.sendDailyWeather(chatId, userAnswer);
     }
 
     protected boolean canEqual(final Object other) {
