@@ -1,19 +1,17 @@
 package com.project.telegrambot.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.project.telegrambot.config.BotConfig;
 import com.project.telegrambot.controller.JsonUtil;
 import com.project.telegrambot.dto.*;
 import kong.unirest.core.HttpResponse;
 import kong.unirest.core.JsonNode;
 import kong.unirest.core.Unirest;
+import kong.unirest.core.json.JSONArray;
 import kong.unirest.core.json.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.sql.Update;
 import org.springframework.stereotype.Service;
-
-import java.io.DataInput;
-import java.util.List;
 
 import static com.project.telegrambot.service.TelegramBotService.ERROR_TEXT;
 
@@ -26,279 +24,391 @@ public class WeatherService {
 
     //final WeatherMain weatherMain = new WeatherMain();
 
-    private String LOCATION_URL = "http://dataservice.accuweather.com/locations/v1/cities/autocomplete";// weatherMain.getACCU_WEATHER_LOCATION_URL();
-    private String API_KEY = "Rjr1HRBdhAMmGhoPPD1V36xrmx30Cpjw"; ;//weatherMain.getACCU_WEATHER_API_KEY();
-    private String WEATHER_URL_NOW = "http://dataservice.accuweather.com/currentconditions/v1/{locationKey}" ;//weatherMain.getACCU_WEATHER_URL_NOW();
+    private static String LOCATION_URL = "http://dataservice.accuweather.com/locations/v1/cities/autocomplete";// weatherMain.getACCU_WEATHER_LOCATION_URL();
+    private static String API_KEY = "Rjr1HRBdhAMmGhoPPD1V36xrmx30Cpjw"; ;//weatherMain.getACCU_WEATHER_API_KEY();
+    private static String WEATHER_URL_NOW = "http://dataservice.accuweather.com/currentconditions/v1/{locationKey}" ;//weatherMain.getACCU_WEATHER_URL_NOW();
 
-    private String WEATHER_URL_DAILY = " http://dataservice.accuweather.com/forecasts/v1/daily/1day/{locationKey}";//weatherMain.getACCU_WEATHER_URL_DAILY();
+    private static String WEATHER_URL_DAILY = " http://dataservice.accuweather.com/forecasts/v1/daily/1day/{locationKey}";//weatherMain.getACCU_WEATHER_URL_DAILY();
 
-//    public WeatherMain getWeatherMain() {
-//         return this.weatherMain;
-//
+    private static String WEATHER_PASS = "yQtMv^]V,2:SL),!";
+
+    private static String EMAIL = "kenderrisha1@gmail.com";
+
+
+    public static JsonNode locationRequest(String cityName) {
+
+        try {
+
+            HttpResponse<JsonNode> response = Unirest.get(LOCATION_URL) //
+                    .basicAuth(EMAIL, WEATHER_PASS)
+                    .queryString("apikey", API_KEY)
+                    .queryString("q", cityName)
+                    .asJson();
+            HttpResponse<String> responseString = Unirest.get(LOCATION_URL)
+                    .basicAuth(EMAIL, WEATHER_PASS)
+                    .queryString("apikey", API_KEY)
+                    .queryString("q", cityName)
+                    .asString();
+            String string = responseString.getBody();
+            String responseStatus = response.getStatusText();
+
+
+
+//        HttpResponse<JsonNode> response = Unirest.get("http://dataservice.accuweather.com/locations/v1/cities/autocomplete?apikey=Rjr1HRBdhAMmGhoPPD1V36xrmx30Cpjw&q=Velten").asJson();
+            String stringStatus = response.getStatusText();
+            System.out.println(response);
+            //       HttpResponse<String> responseString = Unirest.get("http://dataservice.accuweather.com/locations/v1/cities/autocomplete?apikey=Rjr1HRBdhAMmGhoPPD1V36xrmx30Cpjw&q=Velten").asString();
+            //       String string = responseString.getBody();
+            System.out.println(string);
+            return response.getBody();
+
+        } catch (NullPointerException e) {
+            System.out.println("Null pointer exception error " +e.getMessage());
+            throw e;
+        }
+
+    }
+
+
+    public static JsonNode locationRequest() throws JsonProcessingException {
+        String jsonString = "[{\"Version\":1,\"Key\":\"167930\",\"Type\":\"City\",\"Rank\":63,\"LocalizedName\":\"Velten\",\"Country\":{\"ID\":\"DE\",\"LocalizedName\":\"Germany\"},\"AdministrativeArea\":{\"ID\":\"BB\",\"LocalizedName\":\"Brandenburg\"}},{\"Version\":1,\"Key\":\"988012\",\"Type\":\"City\",\"Rank\":85,\"LocalizedName\":\"Veltenhof\",\"Country\":{\"ID\":\"DE\",\"LocalizedName\":\"Germany\"},\"AdministrativeArea\":{\"ID\":\"NI\",\"LocalizedName\":\"Lower Saxony\"}}]";
+
+        JsonNode jsonNode = new JsonNode(jsonString); //Converting to JSONObject since it supports more functionalities
+        return jsonNode;
+    }
+
+
+
+    static JSONArray getJSONArray(JsonNode jsonNode) throws Exception {
+
+
+        return jsonNode.getArray();
+    }
+
+
+
+    static String getLocationKeyString(String cityName) throws Exception {
+        JSONObject location = getJSONArray(locationRequest(cityName)).getJSONObject(0);
+        //      JSONObject location = getJSONArray(locationRequest()).getJSONObject(0);
+
+
+        return location.getString("Key");
+    }
+    static String getLocalisedNameString(String cityName) throws Exception {
+        JSONObject location = getJSONArray(locationRequest(cityName)).getJSONObject(0);
+//        JSONObject location = getJSONArray(locationRequest()).getJSONObject(0);
+
+        return location.getString("LocalizedName");
+    }
+
+    private static JsonNode getCurrentWeatherObject(String locationKey) throws Exception {
+
+//        HttpResponse<JsonNode> response = Unirest.get(WEATHER_URL_NOW).asJson();
+//        HttpResponse<String> responseString = Unirest.get(WEATHER_URL_NOW).asString();
+        HttpResponse<JsonNode> response = Unirest.get(WEATHER_URL_NOW)
+                .basicAuth(EMAIL, WEATHER_PASS)
+                .routeParam("locationKey", locationKey)
+                .queryString("apikey", API_KEY)
+                .asJson();
+        HttpResponse<String> responseString = Unirest.get(WEATHER_URL_NOW)
+                .basicAuth("kenderrisha1@gmail.com", WEATHER_PASS)
+                .routeParam("locationKey", locationKey)
+                .queryString("apikey", API_KEY)
+                .asString();
+        String string = responseString.getBody();
+        return response.getBody();
+    }
+
+    public static JsonNode getCurrentWeatherObject() throws JsonProcessingException {
+        String jsonString = "[{\"LocalObservationDateTime\":\"2024-05-13T13:12:00+02:00\",\"EpochTime\":1715598720,\"WeatherText\":\"Sunny\",\"WeatherIcon\":1,\"HasPrecipitation\":false,\"PrecipitationType\":null,\"IsDayTime\":true,\"Temperature\":{\"Metric\":{\"Value\":22.4,\"Unit\":\"C\",\"UnitType\":17},\"Imperial\":{\"Value\":72.0,\"Unit\":\"F\",\"UnitType\":18}},\"MobileLink\":\"http://www.accuweather.com/en/de/velten/16727/current-weather/167930?lang=en-us\",\"Link\":\"http://www.accuweather.com/en/de/velten/16727/current-weather/167930?lang=en-us\"}]";
+
+        JsonNode jsonNode = new JsonNode(jsonString); //Converting to JSONObject since it supports more functionalities
+        return jsonNode;
+    }
+
+
+    static JSONArray getCurrentWeatherObjectList(JsonNode jsonNode) throws Exception {
+
+
+        return jsonNode.getArray();
+    }
+
+
+
+    static String getWeatherTextString(String locationKey) throws Exception {
+        JSONObject currentWeather = getCurrentWeatherObjectList(getCurrentWeatherObject(locationKey)).getJSONObject(0);
+//        JSONObject currentWeather = getCurrentWeatherObjectList(getCurrentWeatherObject()).getJSONObject(0);
+        String weatherText;
+        try{
+            weatherText = currentWeather.getString("WeatherText");
+        }
+        catch (Exception e){
+            weatherText = "Not available";
+        }
+
+
+        return weatherText;
+    }
+    static String getIsDayTime(String locationKey) throws Exception {
+        JSONObject currentWeather = getCurrentWeatherObjectList(getCurrentWeatherObject(locationKey)).getJSONObject(0);
+        String dayTime;
+        //       JSONObject currentWeather = getCurrentWeatherObjectList(getCurrentWeatherObject()).getJSONObject(0);
+        try {
+            boolean isDayTime = currentWeather.getBoolean("IsDayTime");
+
+            if (isDayTime) {
+                dayTime = "Day";
+            } else {
+                dayTime = "Night";
+            }
+        }
+        catch (Exception e) {
+            dayTime = "Not available";
+        }
+
+        return dayTime;
+    }
+
+    static String getLink(String locationKey) throws Exception {
+        JSONObject currentWeather = getCurrentWeatherObjectList(getCurrentWeatherObject(locationKey)).getJSONObject(0);
+//        JSONObject currentWeather = getCurrentWeatherObjectList(getCurrentWeatherObject()).getJSONObject(0);
+
+        return currentWeather.getString("Link");
+    }
+
+    static String getCurrentWeatherTemperature(String locationKey) throws Exception {
+        JSONObject currentWeather = getCurrentWeatherObjectList(getCurrentWeatherObject(locationKey)).getJSONObject(0);
+        //       JSONObject currentWeather = getCurrentWeatherObjectList(getCurrentWeatherObject()).getJSONObject(0);
+        JSONObject currentTemperature = currentWeather.getJSONObject("Temperature").getJSONObject("Metric");
+        double tempValue;
+        String tempUnit;
+        String stringCurrentTemperature;
+        try{
+            tempValue = currentTemperature.getDouble("Value");
+            tempUnit = currentTemperature.getString("Unit");
+            stringCurrentTemperature = "Temperature now: " + tempValue +tempUnit;
+        }
+        catch (Exception e){
+            stringCurrentTemperature = "Not available";
+        }
+
+
+        return stringCurrentTemperature;
+    }
+
+//    static Map JsonMapping() throws JsonProcessingException {
+//        HttpResponse<String> responseString = Unirest.get("http://dataservice.accuweather.com/locations/v1/cities/autocomplete?apikey=Rjr1HRBdhAMmGhoPPD1V36xrmx30Cpjw&q=Velten").asString();
+//        String jsonString = responseString.getBody();
+//        Map<String, Object> locationMap = objectMapper.readValue(jsonString, new TypeReference<>(){});
+//        return locationMap;
 //    }
 
-
-//    public String getACCU_WEATHER_LOCATION_URL() {
-//
-//        return weatherMain.getACCU_WEATHER_LOCATION_URL();
-//    }
+    public static String sendCurrentWeatherText(String locationKey) throws Exception {
 
 
-//    public String getgetACCU_WEATHER_API_KEY() {
-//
-//        return weatherMain.getACCU_WEATHER_API_KEY();
-//    }
+        return "Weather now: \n"
+                + "Day time: " + getIsDayTime(locationKey) + "\n"
+                + "Weather: " + getWeatherTextString(locationKey) +"\n"
+                + getCurrentWeatherTemperature(locationKey);
+    }
 
 
-//    public String getACCU_WEATHER_URL_DAILY() {
-//
-//        return weatherMain.getACCU_WEATHER_URL_DAILY();
-//    }
-//
-//
-//    public String getACCU_WEATHER_URL_NOW() {
-//
-//        return weatherMain.getACCU_WEATHER_URL_NOW();
-//    }
+    //прогноз погоды
 
+    private static JsonNode getDailyWeatherRequest(String locationKey) throws Exception {
 
-    public JsonNode locationRequest(String cityName) { // TODO: исправить. Криво строится ссылка, не видит API_KEY
-
-    try {
-
-//     HttpResponse<JsonNode> response = Unirest.get(LOCATION_URL)
-//            .queryString("apiKey", API_KEY)
-//             .queryString("q", cityName)
-//             .asJson();
-//    String stringResponse = Unirest.get(LOCATION_URL)
-//            .queryString("apiKey", API_KEY)
-//            .queryString("q", cityName)
-//            .asString().getBody();
-//        String responseStatus = response.getStatusText();
-//        String string = response.toString();
-//
-//
-        HttpResponse<JsonNode> response = Unirest.get("http://dataservice.accuweather.com/locations/v1/cities/autocomplete?apikey=Rjr1HRBdhAMmGhoPPD1V36xrmx30Cpjw&q=Velten").asJson();
-        String stringStratus = response.getStatusText();
-        HttpResponse<String> responseString = Unirest.get("http://dataservice.accuweather.com/locations/v1/cities/autocomplete?apikey=Rjr1HRBdhAMmGhoPPD1V36xrmx30Cpjw&q=Velten").asString();
+        HttpResponse<JsonNode> response = Unirest.get(WEATHER_URL_DAILY)
+                .basicAuth(EMAIL, WEATHER_PASS)
+                .routeParam("locationKey", locationKey)
+                .queryString("apikey", API_KEY)
+                .asJson();
+        HttpResponse<String> responseString = Unirest.get(WEATHER_URL_DAILY)
+                .basicAuth(EMAIL, WEATHER_PASS)
+                .routeParam("locationKey", locationKey)
+                .queryString("apikey", API_KEY)
+                .asString();
         String string = responseString.getBody();
         return response.getBody();
 
-    } catch (NullPointerException e) {
-        log.error("Null pointer exception error " +e.getMessage());
-        throw e;
     }
 
- }
-
-
-    JSONObject getLocationObjectList(String cityName) throws Exception {
-        try{
-        //ObjectMapper objectMapper = new ObjectMapper();
-        JSONObject json = new JSONObject(locationRequest(cityName));
-        JSONObject locationObject = json.getJSONArray("location").getJSONObject(0);
-       // List<LocationAuto> locationList = objectMapper.readValue(locationObject.toString(), objectMapper.getTypeFactory().constructCollectionType(List.class, LocationAuto.class));
-
-        // Выводим результаты
-//        log.info("List of Users:");
-//        for (LocationAuto location : locationList) {
-//            log.info(String.valueOf(location));
-//        }
-
-              if(locationObject == null) {
-           throw new Exception("Cannot parse location");
-       }
-            return locationObject;
-
-       } catch(Exception e) {
-           log.error(ERROR_TEXT + e.getMessage()+"Cannot get weather data");
-           throw e;
-       }
-//       try {
-//       JsonNode locationObject =locationRequest(cityName);
-//       List<LocationAuto> location = JsonUtil.toObject(locationObject.getObject(), LocationAuto.class);
-//        //   Location location = locationRequest(cityName);//.getBody();// если сделать, чтобы предыдущий метод выводил тем же способом локацию, то этот будет уже не нужен
-//       if(location == null) {
-//           throw new Exception("Cannot parse location");
-//       }
-//       return location;
-//       } catch(Exception e) {
-//           log.error(ERROR_TEXT + e.getMessage()+"Cannot get weather data");
-//           throw e;
-//       }
-
-
-   }
-
-   JSONObject getLocationObject(String cityName) throws Exception {
-        JSONObject location = getLocationObjectList(cityName);
-        return location;
-   }
-
-    String getLocationKeyString(String cityName) throws Exception {
-        JSONObject location = getLocationObject(cityName);
-        String locationKey = location.getString("Key");
-
-
-        return locationKey;
-    }
-    String getLocalisedNameString(String cityName) throws Exception {
-         JSONObject location = getLocationObject(cityName);
-         String localisedName = location.getString("LocalizedName");
-        //String localisedName = String.format(location.getLocalisedName());
-
-        return localisedName;
+    private static JsonNode getDailyWeatherRequest() throws Exception {
+        //String jsonString =  "{\"Headline\":{\"EffectiveDate\":\"2024-05-13T14:00:00+02:00\",\"EffectiveEpochDate\":1715601600,\"Severity\":7,\"Text\":\"Very warm from Monday afternoon to Thursday afternoon\",\"Category\":\"heat\",\"EndDate\":\"2024-05-16T20:00:00+02:00\",\"EndEpochDate\":1715882400,\"MobileLink\":\"http://www.accuweather.com/en/de/velten/16727/daily-weather-forecast/167930?lang=en-us\",\"Link\":\"http://www.accuweather.com/en/de/velten/16727/daily-weather-forecast/167930?lang=en-us\"},\"DailyForecasts\":[{\"Date\":\"2024-05-13T07:00:00+02:00\",\"EpochDate\":1715576400,\"Temperature\":{\"Minimum\":{\"Value\":52.0,\"Unit\":\"F\",\"UnitType\":18},\"Maximum\":{\"Value\":76.0,\"Unit\":\"F\",\"UnitType\":18}},\"Day\":{\"Icon\":2,\"IconPhrase\":\"Mostly sunny\",\"HasPrecipitation\":false},\"Night\":{\"Icon\":33,\"IconPhrase\":\"Clear\",\"HasPrecipitation\":false},\"Sources\":[\"AccuWeather\"],\"MobileLink\":\"http://www.accuweather.com/en/de/velten/16727/daily-weather-forecast/167930?day=1&lang=en-us\",\"Link\":\"http://www.accuweather.com/en/de/velten/16727/daily-weather-forecast/167930?day=1&lang=en-us\"}]}";
+        String jsonString = "{\"Headline\": {\"EffectiveDate\": \"2024-05-14T14:00:00+02:00\",\"EffectiveEpochDate\": 1715688000,\"Severity\": 7,\"Text\": \"Very warm from Tuesday afternoon to Thursday afternoon\",\"Category\": \"heat\",\"EndDate\": \"2024-05-16T20:00:00+02:00\",\"EndEpochDate\": 1715882400,\"MobileLink\": \"http://www.accuweather.com/en/de/velten/16727/daily-weather-forecast/167930?unit=c&lang=en-us\",\"Link\": \"http://www.accuweather.com/en/de/velten/16727/daily-weather-forecast/167930?unit=c&lang=en-us\"},\"DailyForecasts\": [{\"Date\": \"2024-05-14T07:00:00+02:00\",\"EpochDate\": 1715662800,\"Temperature\": {\"Minimum\": {\"Value\": 12.8,\"Unit\": \"C\",\"UnitType\": 17},\"Maximum\": {\"Value\": 25.8,\"Unit\": \"C\",\"UnitType\": 17}},\"Day\": {\"Icon\": 1,\"IconPhrase\": \"Sunny\",\"HasPrecipitation\": false},\"Night\": {\"Icon\": 33,\"IconPhrase\": \"Clear\",\"HasPrecipitation\": false},\"Sources\": [\"AccuWeather\"],\"MobileLink\": \"http://www.accuweather.com/en/de/velten/16727/daily-weather-forecast/167930?day=1&unit=c&lang=en-us\",\"Link\": \"http://www.accuweather.com/en/de/velten/16727/daily-weather-forecast/167930?day=1&unit=c&lang=en-us\"}]}";
+        return new JsonNode(jsonString);
     }
 
-    //получение текущей погоды
-    private JSONObject getCurrentWeatherObject(String locationKey) throws Exception {
-        HttpResponse<JsonNode> response = Unirest.get(WEATHER_URL_NOW)
-                .routeParam("locationKey", locationKey)
-                .queryString("apiKey", API_KEY)
-                .asJson();
-        return response.getBody().getObject();
+
+    static JSONObject getDailyWeatherObject(JsonNode jsonNode) throws Exception {
+
+
+        return jsonNode.getObject();
     }
 
-    /**
-     * Get current weather
+    static JSONArray getDailyWeatherObjectList(JSONObject jsonObject, String arrayName) throws Exception {
 
-     * @return Current weather
-     * @throws Exception
-     * */
 
-    private CurrentWeather getCurrentWeather(String cityName) throws Exception {
+        return jsonObject.getJSONArray(arrayName);
+    }
 
+    static String getDailyWeatherHeadlineString(String locationKey) throws Exception {
+        JSONObject dailyWeatherHeadline = getDailyWeatherObject(getDailyWeatherRequest(locationKey)).getJSONObject("Headline");
+//        JSONObject dailyWeatherHeadline = getDailyWeatherObject(getDailyWeatherRequest()).getJSONObject("Headline");
+        String effectiveDate = dailyWeatherHeadline.getString("EffectiveDate");
+        String weatherText = dailyWeatherHeadline.getString("Text");
+        String weatherCategory = dailyWeatherHeadline.getString("Category");
+        String endDate;
         try {
-            String localisedName = getLocalisedNameString(cityName);
-            JSONObject weatherObject = getCurrentWeatherObject(getLocationKeyString(localisedName));
-            CurrentWeather weather = JsonUtil.toObject(weatherObject, CurrentWeather.class);
-            if(weather == null) {
-                throw new Exception("Cannot parse weather");
-            }
-            return weather;
-        } catch(Exception e) {
-            log.error(ERROR_TEXT + e.getMessage());
-            throw e;
+            endDate = dailyWeatherHeadline.getString("EndDate");
         }
+        catch (Exception e) {
+            endDate = "Data unavailable";
+        }
+
+        String link;
+        try{
+
+
+            link = dailyWeatherHeadline.getString("Link");
+        }
+        catch (Exception e){
+            link = "Not available";
+        }
+        return "Date and time: from " + effectiveDate + " to " + endDate + ".  \n Weather: " + weatherCategory + ". " +
+                weatherText + ". \n" + "Link: " + link;
     }
+
+
+    static String getDailyWeatherForecastStringDate(String locationKey) throws Exception {
+        //      JSONObject dailyWeatherForecast = getDailyWeatherObjectList(getDailyWeatherObject(getDailyWeatherRequest()),"DailyForecasts").getJSONObject(0);
+        JSONObject dailyWeatherForecast = getDailyWeatherObjectList(getDailyWeatherObject(getDailyWeatherRequest(locationKey)),"DailyForecasts").getJSONObject(0);
+        return dailyWeatherForecast.getString("Date");
+
+    }
+
+
+
+
+    static JSONObject getDailyWeatherForecastTemperature(String locationKey) throws Exception {
+
+//        JSONObject dailyWeatherForecastTemperature = getDailyWeatherObjectList(getDailyWeatherObject(getDailyWeatherRequest()),"DailyForecasts").getJSONObject(0).getJSONObject("Temperature");
+
+        return getDailyWeatherObjectList(getDailyWeatherObject(getDailyWeatherRequest(locationKey)),"DailyForecasts").getJSONObject(0).getJSONObject("Temperature");
+    }
+
+    static JSONObject getDailyWeatherTempMin(String locationKey) throws Exception {
+        //String value // а почему бы не класть результаты в Map???
+        return getDailyWeatherForecastTemperature(locationKey).getJSONObject("Minimum");
+    }
+
+    static double getDailyWeatherTempMinValue(String locationKey) throws Exception {
+        //String value // а почему бы не класть результаты в Map???
+        return getDailyWeatherTempMin(locationKey).getDouble("Value");
+    }
+
+    static String getDailyWeatherTempMinUnit(String locationKey) throws Exception {
+        return getDailyWeatherTempMin(locationKey).getString("Unit");
+    }
+
+    static JSONObject getDailyWeatherTempMax(String locationKey) throws Exception {
+        return getDailyWeatherForecastTemperature(locationKey).getJSONObject("Maximum");
+    }
+
+
+    static double getDailyWeatherTempMaxValue(String locationKey) throws Exception {
+        return getDailyWeatherTempMax(locationKey).getDouble("Value");
+    }
+
+    static String getDailyWeatherTempMaxUnit(String locationKey) throws Exception {
+        return getDailyWeatherTempMax(locationKey).getString("Unit");
+    }
+
+    static JSONObject getDailyWeatherDay(String locationKey) throws Exception {
+        JSONObject dailyWeatherForecast = getDailyWeatherObjectList(getDailyWeatherObject(getDailyWeatherRequest(locationKey)),"DailyForecast").getJSONObject(0);
+//        JSONObject dailyWeatherForecast = getDailyWeatherObjectList(getDailyWeatherObject(getDailyWeatherRequest()),"DailyForecasts").getJSONObject(0);
+
+        return dailyWeatherForecast.getJSONObject("Day");
+    }
+
+
+    static String getDailyWeatherDayPhrase(String locationKey) throws Exception {
+        return getDailyWeatherDay(locationKey).getString("IconPhrase");
+    }
+
+    static JSONObject getDailyWeatherNight(String locationKey) throws Exception {
+        JSONObject dailyWeatherForecast = getDailyWeatherObjectList(getDailyWeatherObject(getDailyWeatherRequest(locationKey)),"DailyForecasts").getJSONObject(0);
+//        JSONObject dailyWeatherForecast = getDailyWeatherObjectList(getDailyWeatherObject(getDailyWeatherRequest()),"DailyForecasts").getJSONObject(0);
+
+        return dailyWeatherForecast.getJSONObject("Night");
+    }
+
+
+    static String getDailyWeatherNightPhrase(String locationKey) throws Exception {
+        return getDailyWeatherNight(locationKey).getString("IconPhrase");
+    }
+
+
+    static String sendWeatherForecast(String locationKey) throws Exception {
+
+        return "Weather forecast for " + getDailyWeatherForecastStringDate(locationKey) + " :\n"
+                + "Minimal temperature: " + getDailyWeatherTempMinValue(locationKey) + getDailyWeatherTempMinUnit(locationKey) + "\n"
+                + "Maximal temperature: " + getDailyWeatherTempMaxValue(locationKey) + getDailyWeatherTempMaxUnit(locationKey) + "\n"
+                + "Day: " + getDailyWeatherDayPhrase(locationKey) + "\n"
+                + "Night: " + getDailyWeatherNightPhrase(locationKey ) + "\n"
+                + getDailyWeatherHeadlineString(locationKey);
+    }
+
 
 
 
     /**
      * Send weather in city to chat
-     * @param chatId Chat
+
 
      */
-    void sendCurrentWeather(Long chatId, String cityName) {
-        TelegramBotService telegramBotService = new TelegramBotService(new BotConfig());
+   static String sendCurrentWeather(String cityName) {
+
+       String weatherText = "Current weather data unavailable";
         try {
 
-            CurrentWeather currentWeather = getCurrentWeather(getLocalisedNameString(cityName));
+            String  locationKey = getLocationKeyString(cityName);
+            weatherText = sendCurrentWeatherText(locationKey);
 
-            double temperature = currentWeather.getTemperatureCurrent().getTempMetricCurrent().getValue();
-            String weatherText = getWeatherText(currentWeather, temperature);
+            System.out.println(weatherText);
 
-
-            telegramBotService.prepareAndSendMessage(chatId, weatherText);
+           return weatherText;
         } catch(Exception e) {
             log.error(ERROR_TEXT + e.getMessage());
-            telegramBotService.prepareAndSendMessage(chatId, "weather_get_error");
-            //telegramBotService.prepareAndSendMessage(chatId, "weather_get_error");
+
         }
-    }
+       return weatherText;
+   }
 
-    private static String getWeatherText(CurrentWeather currentWeather, double temperature) {
-        String unit = String.format(currentWeather.getTemperatureCurrent().getTempMetricCurrent().getUnit());
-        String localDateTime = String.format(currentWeather.getLocalDateTime());
-        boolean isDayTime = currentWeather.isDayTime();
-        if (isDayTime) {
-            //выводим, что сейчас день
-        }
-        else {
-            //выводим, что сейчас ночь
-        }
-        String link = String.format(currentWeather.getLink());
 
-        String weatherText = String.format("Weather now:\n Date: %tT \n %S \n Temperature: %g %S \n Resource: %S",
-                 localDateTime,
-                 currentWeather.getWeatherText(),
-                temperature, unit, link);
-        return weatherText;
-    }
 
-    private JSONObject getDailyWeatherObject(String locationKey) throws Exception {
-        HttpResponse<JsonNode> response = Unirest.get(WEATHER_URL_DAILY)
-                .routeParam("locationKey", locationKey)
-                .queryString("apiKey", API_KEY)
-                .asJson();
-        return response.getBody().getObject();
-    }
 
-    private WeatherForecastOneDay getDailyWeather(String cityName) throws Exception {
-        try {
-            String localisedName = getLocalisedNameString((cityName));
-            JSONObject weatherObject = getDailyWeatherObject(getLocationKeyString((localisedName)));
-            WeatherForecastOneDay weather = JsonUtil.toObject(weatherObject, WeatherForecastOneDay.class);
-            if(weather == null) {
-                throw new Exception("Cannot parse weather");
-            }
-            return weather;
-        } catch(Exception e) {
-            log.error(ERROR_TEXT + e.getMessage());
-            throw e;
-        }
-    }
+  static   String sendDailyWeather(String cityName) {
 
-     void sendDailyWeather(Long chatId, String cityName) {
-        TelegramBotService telegramBotService = new TelegramBotService(new BotConfig());
+      String weatherText = "Weather forecast data unavailable";
         try {
 
-            WeatherForecastOneDay dailyWeather = getDailyWeather(getLocalisedNameString(cityName));
-            for (DailyForecasts forecasts : dailyWeather.getDailyForecasts()) {
 
+              String  locationKey = getLocationKeyString(cityName);
 
-                String weatherText = getWeatherText(forecasts);
+              weatherText = sendWeatherForecast(locationKey);
 
+            System.out.println(weatherText);
+                return weatherText;
 
-                telegramBotService.prepareAndSendMessage(chatId, weatherText);
-            }
         } catch(Exception e) {
             log.error(ERROR_TEXT + e.getMessage());
-            telegramBotService.prepareAndSendMessage(chatId, "weather_get_error");
+
         }
-    }
-
-    private static String getWeatherText(DailyForecasts forecasts) {
-        double temperatureMin = forecasts.getTemperatureForecast().getMinimumTemperature().getValue();
-        double temperatureMax = forecasts.getTemperatureForecast().getMaximumTemperature().getValue();
-        String temperatureMinUnit = String.format(forecasts.getTemperatureForecast().getMinimumTemperature().getUnit());
-        String temperatureMaxUnit = String.format(forecasts.getTemperatureForecast().getMaximumTemperature().getUnit());
-        String dailyForecastDate = String.format(forecasts.getDailyForecastsDate());
+      return weatherText;
+  }
 
 
-        String weatherText = String.format("Daily forecast:\n Date: %S  \n Temperature(max): %g %S \n Temperature(min): %g %S",
-                dailyForecastDate,
-                temperatureMax, temperatureMaxUnit, temperatureMin, temperatureMinUnit);
-        return weatherText;
-    }
 
-    private void LocationToUser(Update userAnswer){
-       //cityAsk();
-      //  TelegramBotService.cityUserAnswer(userAnswer);
-      //  cityRequest(cityName);
-
-
-    }
-
-    private void CurrentWeatherToUser(Long chatId, String locationKey){
-      //  LocationToUser();
-        sendCurrentWeather(chatId, locationKey);
-    }
-
-    private void DailyWeatherToUser(Long chatId, String locationKey){
-       // LocationToUser();
-        sendDailyWeather(chatId, locationKey);
-    }
 
 
 }

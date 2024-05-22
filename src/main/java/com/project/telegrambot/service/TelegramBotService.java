@@ -25,6 +25,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.project.telegrambot.service.KeyboardButtonService.getReplyKeyboardMarkup;
+import static com.project.telegrambot.service.WeatherService.sendCurrentWeather;
+import static com.project.telegrambot.service.WeatherService.sendDailyWeather;
 
 @Data
 @Slf4j
@@ -47,7 +49,6 @@ public class TelegramBotService extends TelegramLongPollingBot {
 
     private List<Message> sendMessages = new ArrayList<>();
 
-    private ThreadLocal<Update> updateEvent = new ThreadLocal<>();
 
     public TelegramBotService(BotConfig config) {
 
@@ -106,17 +107,13 @@ public class TelegramBotService extends TelegramLongPollingBot {
                 CALLBACK_CITY = callbackData;
                 prepareAndSendMessage(chatId, "Now I prepare the weather forecast for you. City: " + CALLBACK_CITY + ". Please wait.");
                 prepareAndSendMessage(chatId, "The city is " + CALLBACK_CITY);
-                try {
-                    currentWeatherCommand(chatId, CALLBACK_CITY);
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
+//                try {
+//                    //prepareAndSendMessage(chatId, sendCurrentWeather(CALLBACK_CITY));
+//                    menuBot(, chatId, update);
+//                } catch (Exception e) {
+//                    throw new RuntimeException(e);
+//                }
 
-                // var joke = getRandomJoke();
-
-                //joke.ifPresent(randomJoke -> addButtonAndSendMessage(randomJoke.getBody(), chatId));
-
-                // joke.ifPresent(randomJoke -> addButtonAndEditText(randomJoke.getBody(), chatId, update.getCallbackQuery().getMessage().getMessageId()));
 
             }
             if (callbackData.equals("Berlin")) {
@@ -124,7 +121,7 @@ public class TelegramBotService extends TelegramLongPollingBot {
                 CALLBACK_CITY = callbackData;
                 prepareAndSendMessage(chatId, "Now I prepare the weather forecast for you. City: " + CALLBACK_CITY + ". Please wait.");
                 try {
-                    currentWeatherCommand(chatId, CALLBACK_CITY);
+                    prepareAndSendMessage(chatId, sendCurrentWeather(CALLBACK_CITY));
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
@@ -189,39 +186,28 @@ public class TelegramBotService extends TelegramLongPollingBot {
                 break;
 
             case "/weathernow":
-                prepareAndSendMessage(chatId, "Here is weather for today.");
-                cityChoose(chatId);
 
-//                    prepareAndSendMessage(chatId, "The city is " + CALLBACK_CITY);
-//                    currentWeatherCommand(chatId, CALLBACK_CITY);
-
+                currentWeatherCommand(chatId);
                 break;
 
             case "/dailyweather":
 
-                prepareAndSendMessage(chatId, "Here is weather for tomorrow.");
-                cityChoose(chatId);
+                dailyWeatherCommand(chatId);
 
-          //      dailyWeatherCommand(chatId, CALLBACK_CITY);
 
                 break;
 
-            case "/set_city":
-                //  String city = setCity(messageText, update);
-                break;
 
             case "weather now":
-                prepareAndSendMessage(chatId, "Here is weather for today.");
-                cityChoose(chatId);
+                currentWeatherCommand(chatId);
 
-            //    prepareAndSendMessage(chatId, "The city is " + CALLBACK_CITY);
-          //      currentWeatherCommand(chatId, CALLBACK_CITY);
+
+
                 break;
 
             case "weather for 1 day":
-                prepareAndSendMessage(chatId, "Here is weather for tomorrow.");
-                cityChoose(chatId);
-              //  dailyWeatherCommand(chatId, CALLBACK_CITY);
+                dailyWeatherCommand(chatId);
+
                 break;
 
             default:
@@ -230,6 +216,22 @@ public class TelegramBotService extends TelegramLongPollingBot {
                 break;
         }
 
+    }
+
+    private void dailyWeatherCommand (Long chatId){
+        prepareAndSendMessage(chatId, "Here is weather for tomorrow.");
+        cityChoose(chatId);
+        prepareAndSendMessage(chatId, sendDailyWeather(CALLBACK_CITY));
+        //      dailyWeatherCommand(chatId, CALLBACK_CITY);
+    }
+
+    private void currentWeatherCommand(Long chatId){
+        prepareAndSendMessage(chatId, "Here is weather for today.");
+        cityChoose(chatId);
+
+
+        prepareAndSendMessage(chatId, sendCurrentWeather(CALLBACK_CITY));
+//               prepareAndSendMessage(chatId, "The city is " + CALLBACK_CITY);
     }
 
     private void register(long chatId) {
@@ -272,21 +274,6 @@ public class TelegramBotService extends TelegramLongPollingBot {
         executeMessage(message);
     }
 
-    private void currentWeatherCommand(long chatId, String userAnswer) throws Exception {
-        WeatherService weather = new WeatherService();
-        //Location location = weather.getLocationObject(userAnswer);
-       // String locationKey = WeatherService.getLocationKeyString(location);
-        weather.sendCurrentWeather(chatId, userAnswer);
-
-
-    }
-
-    private void dailyWeatherCommand(long chatId, String userAnswer) throws Exception {
-        WeatherService weather = new WeatherService();
-        //Location location = weather.getLocationObject(userAnswer);
-        //String locationKey = WeatherService.getLocationKeyString(location);
-        weather.sendDailyWeather(chatId, userAnswer);
-    }
 
     protected boolean canEqual(final Object other) {
         return other instanceof TelegramBotService;
