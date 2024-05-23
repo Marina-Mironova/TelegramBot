@@ -28,7 +28,7 @@ public class WeatherService {
     private static String API_KEY = "Rjr1HRBdhAMmGhoPPD1V36xrmx30Cpjw"; ;//weatherMain.getACCU_WEATHER_API_KEY();
     private static String WEATHER_URL_NOW = "http://dataservice.accuweather.com/currentconditions/v1/{locationKey}" ;//weatherMain.getACCU_WEATHER_URL_NOW();
 
-    private static String WEATHER_URL_DAILY = " http://dataservice.accuweather.com/forecasts/v1/daily/1day/{locationKey}";//weatherMain.getACCU_WEATHER_URL_DAILY();
+    private static String WEATHER_URL_DAILY = "http://dataservice.accuweather.com/forecasts/v1/daily/1day/{locationKey}";//weatherMain.getACCU_WEATHER_URL_DAILY();
 
     private static String WEATHER_PASS = "yQtMv^]V,2:SL),!";
 

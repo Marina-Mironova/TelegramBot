@@ -34,6 +34,7 @@ import static com.project.telegrambot.service.WeatherService.sendDailyWeather;
 public class TelegramBotService extends TelegramLongPollingBot {
 
 
+    private static String MESSAGE_TEXT = "";
     @Autowired
     private UserRepository userRepository;
 
@@ -41,14 +42,21 @@ public class TelegramBotService extends TelegramLongPollingBot {
 
     static final String HELP_TEXT = "Here should be help for using this bot.";
 
-    static final String YES_BUTTON = "YES_BUTTON";
-    static final String NO_BUTTON = "NO_BUTTON";
+    static final String YES_BUTTON = "YES";
+    static final String NO_BUTTON = "NO";
     String CALLBACK_CITY = null;
 
     static final String ERROR_TEXT = "Error occurred: ";
 
     private List<Message> sendMessages = new ArrayList<>();
 
+
+    /**
+     * TelegramBotService Method
+     * - constructor of this class
+     * with the list of usable commands
+     * @param config
+     */
 
     public TelegramBotService(BotConfig config) {
 
@@ -91,7 +99,7 @@ public class TelegramBotService extends TelegramLongPollingBot {
             String messageText = update.getMessage().getText();
             long chatId = update.getMessage().getChatId();
             prepareAndSendMessage(chatId, "Thank you!");
-
+            MESSAGE_TEXT = messageText;
             try {
                 menuBot(messageText, chatId, update);
             } catch (Exception e) {
@@ -102,36 +110,32 @@ public class TelegramBotService extends TelegramLongPollingBot {
             String callbackData = update.getCallbackQuery().getData();
             long chatId = update.getCallbackQuery().getMessage().getChatId();
 
-            if (callbackData.equals("Velten")) { // TODO: внести изменения для разных погодных команд
-                prepareAndSendMessage(chatId, "Your city is " + callbackData);
-                CALLBACK_CITY = callbackData;
-                prepareAndSendMessage(chatId, "Now I prepare the weather forecast for you. City: " + CALLBACK_CITY + ". Please wait.");
-                prepareAndSendMessage(chatId, "The city is " + CALLBACK_CITY);
-//                try {
-//                    //prepareAndSendMessage(chatId, sendCurrentWeather(CALLBACK_CITY));
-//                    menuBot(, chatId, update);
-//                } catch (Exception e) {
-//                    throw new RuntimeException(e);
-//                }
 
-
-            }
-            if (callbackData.equals("Berlin")) {
-                prepareAndSendMessage(chatId, "Your city is " + callbackData);
-                CALLBACK_CITY = callbackData;
-                prepareAndSendMessage(chatId, "Now I prepare the weather forecast for you. City: " + CALLBACK_CITY + ". Please wait.");
+            prepareAndSendMessage(chatId, "Your city is " + callbackData);
+            CALLBACK_CITY = callbackData;
+            prepareAndSendMessage(chatId, "Now I prepare the weather forecast for you. City: " + CALLBACK_CITY + ". Please wait.");
+            prepareAndSendMessage(chatId, "The city is " + CALLBACK_CITY);
                 try {
-                    prepareAndSendMessage(chatId, sendCurrentWeather(CALLBACK_CITY));
+                    menuBot(MESSAGE_TEXT, chatId, update); //подумай, как сделать так, чтобы не спрашивал город два раза
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
-            }
+
+
+
+
+
 
         }
 
     }
 
 
+    /**
+     * registerUser Method
+     * - user registration to the database
+     * @param msg
+     */
     private void registerUser(Message msg) {
         if (userRepository.findById(msg.getChatId()).isEmpty()) {
 
@@ -152,6 +156,12 @@ public class TelegramBotService extends TelegramLongPollingBot {
     }
 
 
+    /**
+     * prepareAndSendMessage Method
+     * - sends any message to the chat
+     * @param chatId
+     * @param textToSend
+     */
     public void prepareAndSendMessage(Long chatId, String textToSend) {
         SendMessage message = new SendMessage();
         message.setChatId(String.valueOf(chatId));
@@ -167,6 +177,14 @@ public class TelegramBotService extends TelegramLongPollingBot {
         }
     }
 
+    /**
+     * menuBot Method
+     * - Bot commands menu with their actions
+     * @param messageText
+     * @param chatId
+     * @param update
+     * @throws Exception
+     */
     private void menuBot(String messageText, long chatId, Update update) throws Exception {
         switch (messageText) {
             case "/start":
@@ -185,30 +203,18 @@ public class TelegramBotService extends TelegramLongPollingBot {
                 register(chatId);
                 break;
 
-            case "/weathernow":
+            case "/weathernow", "weather now":
 
                 currentWeatherCommand(chatId);
                 break;
 
-            case "/dailyweather":
+            case "/dailyweather", "weather for 1 day":
 
                 dailyWeatherCommand(chatId);
 
 
                 break;
 
-
-            case "weather now":
-                currentWeatherCommand(chatId);
-
-
-
-                break;
-
-            case "weather for 1 day":
-                dailyWeatherCommand(chatId);
-
-                break;
 
             default:
 
@@ -218,6 +224,12 @@ public class TelegramBotService extends TelegramLongPollingBot {
 
     }
 
+
+    /**
+     * dailyWeatherCommand Method
+     * - it sends weather forecast for the next day to the bot
+     * @param chatId
+     */
     private void dailyWeatherCommand (Long chatId){
         prepareAndSendMessage(chatId, "Here is weather for tomorrow.");
         cityChoose(chatId);
@@ -225,6 +237,11 @@ public class TelegramBotService extends TelegramLongPollingBot {
         //      dailyWeatherCommand(chatId, CALLBACK_CITY);
     }
 
+    /**
+     * currentWeatherCommand Method
+     * - it sends current weather info to the bot
+     * @param chatId
+     */
     private void currentWeatherCommand(Long chatId){
         prepareAndSendMessage(chatId, "Here is weather for today.");
         cityChoose(chatId);
@@ -234,6 +251,13 @@ public class TelegramBotService extends TelegramLongPollingBot {
 //               prepareAndSendMessage(chatId, "The city is " + CALLBACK_CITY);
     }
 
+    /**
+     * register Method
+     * - send message asking user.
+     * if he really wants to register.
+     * Creates inline keyboard with "yes" and "no" buttons.
+     * @param chatId
+     */
     private void register(long chatId) {
         SendMessage message = new SendMessage();
         message.setChatId(String.valueOf(chatId));
@@ -245,6 +269,13 @@ public class TelegramBotService extends TelegramLongPollingBot {
         executeMessage(message);
     }
 
+    /**
+     * startCommandReceived Method
+     * - bot reaction, when command "/start" getting
+     * @param chatId
+     * @param name
+     * @throws Exception
+     */
     public void startCommandReceived(long chatId, String name) throws Exception {
 
         String answer = EmojiParser.parseToUnicode("Hi, " + name + ", nice to meet you!" + " :blush:");
@@ -263,6 +294,12 @@ public class TelegramBotService extends TelegramLongPollingBot {
         executeMessage(message);
     }
 
+    /**
+     * cityChoose Method
+     * - send message with question,
+     * ask choosing city from inline keyboard buttons
+     * @param chatId
+     */
     private void cityChoose(long chatId) {
         SendMessage message = new SendMessage();
         message.setChatId(String.valueOf(chatId));
@@ -274,9 +311,5 @@ public class TelegramBotService extends TelegramLongPollingBot {
         executeMessage(message);
     }
 
-
-    protected boolean canEqual(final Object other) {
-        return other instanceof TelegramBotService;
-    }
 
 }
