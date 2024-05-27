@@ -34,6 +34,10 @@ public class WeatherService {
 
     private static String EMAIL = "kenderrisha1@gmail.com";
 
+    private static final boolean offlineTest = false;
+
+
+
 
     public static JsonNode locationRequest(String cityName) {
 
@@ -44,12 +48,12 @@ public class WeatherService {
                     .queryString("apikey", API_KEY)
                     .queryString("q", cityName)
                     .asJson();
-            HttpResponse<String> responseString = Unirest.get(LOCATION_URL)
-                    .basicAuth(EMAIL, WEATHER_PASS)
-                    .queryString("apikey", API_KEY)
-                    .queryString("q", cityName)
-                    .asString();
-            String string = responseString.getBody();
+//            HttpResponse<String> responseString = Unirest.get(LOCATION_URL)
+//                    .basicAuth(EMAIL, WEATHER_PASS)
+//                    .queryString("apikey", API_KEY)
+//                    .queryString("q", cityName)
+//                    .asString();
+//            String string = responseString.getBody();
             String responseStatus = response.getStatusText();
 
 
@@ -59,7 +63,7 @@ public class WeatherService {
             System.out.println(response);
             //       HttpResponse<String> responseString = Unirest.get("http://dataservice.accuweather.com/locations/v1/cities/autocomplete?apikey=Rjr1HRBdhAMmGhoPPD1V36xrmx30Cpjw&q=Velten").asString();
             //       String string = responseString.getBody();
-            System.out.println(string);
+  //          System.out.println(string);
             return response.getBody();
 
         } catch (NullPointerException e) {
@@ -88,17 +92,24 @@ public class WeatherService {
 
 
     static String getLocationKeyString(String cityName) throws Exception {
-        JSONObject location = getJSONArray(locationRequest(cityName)).getJSONObject(0);
-        //      JSONObject location = getJSONArray(locationRequest()).getJSONObject(0);
+        if(offlineTest == true) {
+            JSONObject location = getJSONArray(locationRequest()).getJSONObject(0);
+            return location.getString("Key");
+        }
+        else {
+            JSONObject location = getJSONArray(locationRequest(cityName)).getJSONObject(0);
+            return location.getString("Key");
+        }
 
-
-        return location.getString("Key");
     }
     static String getLocalisedNameString(String cityName) throws Exception {
-        JSONObject location = getJSONArray(locationRequest(cityName)).getJSONObject(0);
-//        JSONObject location = getJSONArray(locationRequest()).getJSONObject(0);
-
-        return location.getString("LocalizedName");
+        if(offlineTest == true){
+            JSONObject location = getJSONArray(locationRequest()).getJSONObject(0);
+            return location.getString("LocalizedName");
+        } else {
+            JSONObject location = getJSONArray(locationRequest(cityName)).getJSONObject(0);
+            return location.getString("LocalizedName");
+        }
     }
 
     private static JsonNode getCurrentWeatherObject(String locationKey) throws Exception {
@@ -110,12 +121,12 @@ public class WeatherService {
                 .routeParam("locationKey", locationKey)
                 .queryString("apikey", API_KEY)
                 .asJson();
-        HttpResponse<String> responseString = Unirest.get(WEATHER_URL_NOW)
-                .basicAuth("kenderrisha1@gmail.com", WEATHER_PASS)
-                .routeParam("locationKey", locationKey)
-                .queryString("apikey", API_KEY)
-                .asString();
-        String string = responseString.getBody();
+//        HttpResponse<String> responseString = Unirest.get(WEATHER_URL_NOW)
+//                .basicAuth("kenderrisha1@gmail.com", WEATHER_PASS)
+//                .routeParam("locationKey", locationKey)
+//                .queryString("apikey", API_KEY)
+//                .asString();
+ //       String string = responseString.getBody();
         return response.getBody();
     }
 
@@ -128,16 +139,19 @@ public class WeatherService {
 
 
     static JSONArray getCurrentWeatherObjectList(JsonNode jsonNode) throws Exception {
-
-
         return jsonNode.getArray();
     }
 
 
 
     static String getWeatherTextString(String locationKey) throws Exception {
-        JSONObject currentWeather = getCurrentWeatherObjectList(getCurrentWeatherObject(locationKey)).getJSONObject(0);
-//        JSONObject currentWeather = getCurrentWeatherObjectList(getCurrentWeatherObject()).getJSONObject(0);
+        JSONObject currentWeather;
+        if (offlineTest == true){
+            currentWeather = getCurrentWeatherObjectList(getCurrentWeatherObject()).getJSONObject(0);
+        } else {
+            currentWeather = getCurrentWeatherObjectList(getCurrentWeatherObject(locationKey)).getJSONObject(0);
+        }
+
         String weatherText;
         try{
             weatherText = currentWeather.getString("WeatherText");
@@ -150,9 +164,15 @@ public class WeatherService {
         return weatherText;
     }
     static String getIsDayTime(String locationKey) throws Exception {
-        JSONObject currentWeather = getCurrentWeatherObjectList(getCurrentWeatherObject(locationKey)).getJSONObject(0);
+        JSONObject currentWeather;
+        if (offlineTest == true){
+            currentWeather = getCurrentWeatherObjectList(getCurrentWeatherObject()).getJSONObject(0);
+        }else {
+            currentWeather = getCurrentWeatherObjectList(getCurrentWeatherObject(locationKey)).getJSONObject(0);
+        }
+
         String dayTime;
-        //       JSONObject currentWeather = getCurrentWeatherObjectList(getCurrentWeatherObject()).getJSONObject(0);
+        //
         try {
             boolean isDayTime = currentWeather.getBoolean("IsDayTime");
 
@@ -170,15 +190,23 @@ public class WeatherService {
     }
 
     static String getLink(String locationKey) throws Exception {
-        JSONObject currentWeather = getCurrentWeatherObjectList(getCurrentWeatherObject(locationKey)).getJSONObject(0);
-//        JSONObject currentWeather = getCurrentWeatherObjectList(getCurrentWeatherObject()).getJSONObject(0);
-
-        return currentWeather.getString("Link");
+        if (offlineTest == true){
+            JSONObject currentWeather = getCurrentWeatherObjectList(getCurrentWeatherObject()).getJSONObject(0);
+            return currentWeather.getString("Link");
+        } else {
+            JSONObject currentWeather = getCurrentWeatherObjectList(getCurrentWeatherObject(locationKey)).getJSONObject(0);
+            return currentWeather.getString("Link");
+        }
     }
 
     static String getCurrentWeatherTemperature(String locationKey) throws Exception {
-        JSONObject currentWeather = getCurrentWeatherObjectList(getCurrentWeatherObject(locationKey)).getJSONObject(0);
-        //       JSONObject currentWeather = getCurrentWeatherObjectList(getCurrentWeatherObject()).getJSONObject(0);
+        JSONObject currentWeather;
+        if(offlineTest == true){
+            currentWeather = getCurrentWeatherObjectList(getCurrentWeatherObject()).getJSONObject(0);
+        } else {
+            currentWeather = getCurrentWeatherObjectList(getCurrentWeatherObject(locationKey)).getJSONObject(0);
+        }
+
         JSONObject currentTemperature = currentWeather.getJSONObject("Temperature").getJSONObject("Metric");
         double tempValue;
         String tempUnit;
@@ -209,7 +237,8 @@ public class WeatherService {
         return "Weather now: \n"
                 + "Day time: " + getIsDayTime(locationKey) + "\n"
                 + "Weather: " + getWeatherTextString(locationKey) +"\n"
-                + getCurrentWeatherTemperature(locationKey);
+                + getCurrentWeatherTemperature(locationKey)
+                + getLink(locationKey);
     }
 
 
@@ -221,39 +250,39 @@ public class WeatherService {
                 .basicAuth(EMAIL, WEATHER_PASS)
                 .routeParam("locationKey", locationKey)
                 .queryString("apikey", API_KEY)
+                .queryString("metric", true)
                 .asJson();
-        HttpResponse<String> responseString = Unirest.get(WEATHER_URL_DAILY)
-                .basicAuth(EMAIL, WEATHER_PASS)
-                .routeParam("locationKey", locationKey)
-                .queryString("apikey", API_KEY)
-                .asString();
-        String string = responseString.getBody();
+//        HttpResponse<String> responseString = Unirest.get(WEATHER_URL_DAILY)
+//                .basicAuth(EMAIL, WEATHER_PASS)
+//                .routeParam("locationKey", locationKey)
+//                .queryString("apikey", API_KEY)
+//                .asString();
+//        String string = responseString.getBody();
         return response.getBody();
 
     }
 
     private static JsonNode getDailyWeatherRequest() throws Exception {
-        //String jsonString =  "{\"Headline\":{\"EffectiveDate\":\"2024-05-13T14:00:00+02:00\",\"EffectiveEpochDate\":1715601600,\"Severity\":7,\"Text\":\"Very warm from Monday afternoon to Thursday afternoon\",\"Category\":\"heat\",\"EndDate\":\"2024-05-16T20:00:00+02:00\",\"EndEpochDate\":1715882400,\"MobileLink\":\"http://www.accuweather.com/en/de/velten/16727/daily-weather-forecast/167930?lang=en-us\",\"Link\":\"http://www.accuweather.com/en/de/velten/16727/daily-weather-forecast/167930?lang=en-us\"},\"DailyForecasts\":[{\"Date\":\"2024-05-13T07:00:00+02:00\",\"EpochDate\":1715576400,\"Temperature\":{\"Minimum\":{\"Value\":52.0,\"Unit\":\"F\",\"UnitType\":18},\"Maximum\":{\"Value\":76.0,\"Unit\":\"F\",\"UnitType\":18}},\"Day\":{\"Icon\":2,\"IconPhrase\":\"Mostly sunny\",\"HasPrecipitation\":false},\"Night\":{\"Icon\":33,\"IconPhrase\":\"Clear\",\"HasPrecipitation\":false},\"Sources\":[\"AccuWeather\"],\"MobileLink\":\"http://www.accuweather.com/en/de/velten/16727/daily-weather-forecast/167930?day=1&lang=en-us\",\"Link\":\"http://www.accuweather.com/en/de/velten/16727/daily-weather-forecast/167930?day=1&lang=en-us\"}]}";
         String jsonString = "{\"Headline\": {\"EffectiveDate\": \"2024-05-14T14:00:00+02:00\",\"EffectiveEpochDate\": 1715688000,\"Severity\": 7,\"Text\": \"Very warm from Tuesday afternoon to Thursday afternoon\",\"Category\": \"heat\",\"EndDate\": \"2024-05-16T20:00:00+02:00\",\"EndEpochDate\": 1715882400,\"MobileLink\": \"http://www.accuweather.com/en/de/velten/16727/daily-weather-forecast/167930?unit=c&lang=en-us\",\"Link\": \"http://www.accuweather.com/en/de/velten/16727/daily-weather-forecast/167930?unit=c&lang=en-us\"},\"DailyForecasts\": [{\"Date\": \"2024-05-14T07:00:00+02:00\",\"EpochDate\": 1715662800,\"Temperature\": {\"Minimum\": {\"Value\": 12.8,\"Unit\": \"C\",\"UnitType\": 17},\"Maximum\": {\"Value\": 25.8,\"Unit\": \"C\",\"UnitType\": 17}},\"Day\": {\"Icon\": 1,\"IconPhrase\": \"Sunny\",\"HasPrecipitation\": false},\"Night\": {\"Icon\": 33,\"IconPhrase\": \"Clear\",\"HasPrecipitation\": false},\"Sources\": [\"AccuWeather\"],\"MobileLink\": \"http://www.accuweather.com/en/de/velten/16727/daily-weather-forecast/167930?day=1&unit=c&lang=en-us\",\"Link\": \"http://www.accuweather.com/en/de/velten/16727/daily-weather-forecast/167930?day=1&unit=c&lang=en-us\"}]}";
         return new JsonNode(jsonString);
     }
 
 
     static JSONObject getDailyWeatherObject(JsonNode jsonNode) throws Exception {
-
-
         return jsonNode.getObject();
     }
 
     static JSONArray getDailyWeatherObjectList(JSONObject jsonObject, String arrayName) throws Exception {
-
-
         return jsonObject.getJSONArray(arrayName);
     }
 
     static String getDailyWeatherHeadlineString(String locationKey) throws Exception {
-        JSONObject dailyWeatherHeadline = getDailyWeatherObject(getDailyWeatherRequest(locationKey)).getJSONObject("Headline");
-//        JSONObject dailyWeatherHeadline = getDailyWeatherObject(getDailyWeatherRequest()).getJSONObject("Headline");
+        JSONObject dailyWeatherHeadline;
+        if (offlineTest == true){
+            dailyWeatherHeadline = getDailyWeatherObject(getDailyWeatherRequest()).getJSONObject("Headline");
+        } else {
+            dailyWeatherHeadline = getDailyWeatherObject(getDailyWeatherRequest(locationKey)).getJSONObject("Headline");
+        }
         String effectiveDate = dailyWeatherHeadline.getString("EffectiveDate");
         String weatherText = dailyWeatherHeadline.getString("Text");
         String weatherCategory = dailyWeatherHeadline.getString("Category");
@@ -280,8 +309,12 @@ public class WeatherService {
 
 
     static String getDailyWeatherForecastStringDate(String locationKey) throws Exception {
-        //      JSONObject dailyWeatherForecast = getDailyWeatherObjectList(getDailyWeatherObject(getDailyWeatherRequest()),"DailyForecasts").getJSONObject(0);
-        JSONObject dailyWeatherForecast = getDailyWeatherObjectList(getDailyWeatherObject(getDailyWeatherRequest(locationKey)),"DailyForecasts").getJSONObject(0);
+        JSONObject dailyWeatherForecast;
+        if (offlineTest == true){
+            dailyWeatherForecast = getDailyWeatherObjectList(getDailyWeatherObject(getDailyWeatherRequest()),"DailyForecasts").getJSONObject(0);
+        } else {
+            dailyWeatherForecast = getDailyWeatherObjectList(getDailyWeatherObject(getDailyWeatherRequest(locationKey)),"DailyForecasts").getJSONObject(0);
+        }
         return dailyWeatherForecast.getString("Date");
 
     }
@@ -290,19 +323,19 @@ public class WeatherService {
 
 
     static JSONObject getDailyWeatherForecastTemperature(String locationKey) throws Exception {
+        if (offlineTest == true){
+            return getDailyWeatherObjectList(getDailyWeatherObject(getDailyWeatherRequest()),"DailyForecasts").getJSONObject(0).getJSONObject("Temperature");
+        } else {
+            return getDailyWeatherObjectList(getDailyWeatherObject(getDailyWeatherRequest(locationKey)),"DailyForecasts").getJSONObject(0).getJSONObject("Temperature");
+        }
 
-//        JSONObject dailyWeatherForecastTemperature = getDailyWeatherObjectList(getDailyWeatherObject(getDailyWeatherRequest()),"DailyForecasts").getJSONObject(0).getJSONObject("Temperature");
-
-        return getDailyWeatherObjectList(getDailyWeatherObject(getDailyWeatherRequest(locationKey)),"DailyForecasts").getJSONObject(0).getJSONObject("Temperature");
     }
 
     static JSONObject getDailyWeatherTempMin(String locationKey) throws Exception {
-        //String value // а почему бы не класть результаты в Map???
         return getDailyWeatherForecastTemperature(locationKey).getJSONObject("Minimum");
     }
 
     static double getDailyWeatherTempMinValue(String locationKey) throws Exception {
-        //String value // а почему бы не класть результаты в Map???
         return getDailyWeatherTempMin(locationKey).getDouble("Value");
     }
 
@@ -324,8 +357,12 @@ public class WeatherService {
     }
 
     static JSONObject getDailyWeatherDay(String locationKey) throws Exception {
-        JSONObject dailyWeatherForecast = getDailyWeatherObjectList(getDailyWeatherObject(getDailyWeatherRequest(locationKey)),"DailyForecast").getJSONObject(0);
-//        JSONObject dailyWeatherForecast = getDailyWeatherObjectList(getDailyWeatherObject(getDailyWeatherRequest()),"DailyForecasts").getJSONObject(0);
+        JSONObject dailyWeatherForecast;
+        if (offlineTest == true){
+            dailyWeatherForecast = getDailyWeatherObjectList(getDailyWeatherObject(getDailyWeatherRequest()),"DailyForecasts").getJSONObject(0);
+        } else {
+            dailyWeatherForecast = getDailyWeatherObjectList(getDailyWeatherObject(getDailyWeatherRequest(locationKey)),"DailyForecasts").getJSONObject(0);
+        }
 
         return dailyWeatherForecast.getJSONObject("Day");
     }
@@ -336,8 +373,12 @@ public class WeatherService {
     }
 
     static JSONObject getDailyWeatherNight(String locationKey) throws Exception {
-        JSONObject dailyWeatherForecast = getDailyWeatherObjectList(getDailyWeatherObject(getDailyWeatherRequest(locationKey)),"DailyForecasts").getJSONObject(0);
-//        JSONObject dailyWeatherForecast = getDailyWeatherObjectList(getDailyWeatherObject(getDailyWeatherRequest()),"DailyForecasts").getJSONObject(0);
+        JSONObject dailyWeatherForecast;
+        if (offlineTest == true){
+            dailyWeatherForecast = getDailyWeatherObjectList(getDailyWeatherObject(getDailyWeatherRequest()),"DailyForecasts").getJSONObject(0);
+        } else {
+            dailyWeatherForecast = getDailyWeatherObjectList(getDailyWeatherObject(getDailyWeatherRequest(locationKey)),"DailyForecasts").getJSONObject(0);
+        }
 
         return dailyWeatherForecast.getJSONObject("Night");
     }
