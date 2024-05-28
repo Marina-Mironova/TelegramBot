@@ -33,13 +33,13 @@ import static com.project.telegrambot.service.WeatherService.sendDailyWeather;
 public class TelegramBotService extends TelegramLongPollingBot {
 
 
-    private static String MESSAGE_TEXT = "";
+    private String MESSAGE_TEXT = "";
     @Autowired
     private UserRepository userRepository;
 
     final BotConfig config;
 
-    static final String HELP_TEXT = "Here should be help for using this bot.";
+    final String HELP_TEXT = "Here should be help for using this bot.";
 
     static final String YES_BUTTON = "YES";
     static final String NO_BUTTON = "NO";
@@ -47,7 +47,7 @@ public class TelegramBotService extends TelegramLongPollingBot {
 
     static final String ERROR_TEXT = "Error occurred: ";
 
-    static boolean isCallback = false;
+    boolean isCallback = false;
 
     private List<Message> sendMessages = new ArrayList<>();
 
