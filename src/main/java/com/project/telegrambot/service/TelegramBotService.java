@@ -11,7 +11,6 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
@@ -70,8 +69,6 @@ public class TelegramBotService extends TelegramLongPollingBot {
         listOfCommands.add(new BotCommand("/help", "info how to use this bot"));
         listOfCommands.add(new BotCommand("/weathernow", "current weather"));
         listOfCommands.add(new BotCommand("/dailyweather", "weather info for the next day"));
-        listOfCommands.add(new BotCommand("/echo", "data typing for command"));
-        listOfCommands.add(new BotCommand("/set_city", "set city for the weather forecast"));
         //listOfCommands.add(new BotCommand("/stop", "stop sending new rss to you"));
         try {
             this.execute(new SetMyCommands(listOfCommands, new BotCommandScopeDefault(), null));
@@ -180,7 +177,7 @@ public class TelegramBotService extends TelegramLongPollingBot {
 
             case "/weathernow", "weather now":
 
-                currentWeatherCommand(chatId, update);
+                currentWeatherCommand(chatId);
                 break;
 
             case "/dailyweather", "weather for 1 day":
@@ -207,10 +204,16 @@ public class TelegramBotService extends TelegramLongPollingBot {
      */
     private void dailyWeatherCommand (Long chatId, Update update){
         prepareAndSendMessage(chatId, "Here is weather for tomorrow.");
-        if (isCallback == false) {
+        if (!isCallback) {
             cityChoose(chatId);
         }
-        prepareAndSendMessage(chatId, sendDailyWeather(CALLBACK_CITY));
+
+        if (CALLBACK_CITY != null) {
+            prepareAndSendMessage(chatId, sendDailyWeather(CALLBACK_CITY));
+        }
+        else {
+            prepareAndSendMessage(chatId, "Press the button and wait a second...");
+        }
 
     }
 
@@ -219,13 +222,18 @@ public class TelegramBotService extends TelegramLongPollingBot {
      * - it sends current weather info to the bot
      * @param chatId
      */
-    private void currentWeatherCommand(Long chatId, Update update){
+    private void currentWeatherCommand(Long chatId){
         prepareAndSendMessage(chatId, "Here is weather for today.");
-        if (isCallback == false){
+        if (!isCallback){
             cityChoose(chatId);
         }
-        prepareAndSendMessage(chatId, sendCurrentWeather(CALLBACK_CITY));
 
+        if (CALLBACK_CITY != null) {
+            prepareAndSendMessage(chatId, sendCurrentWeather(CALLBACK_CITY));
+        }
+        else {
+            prepareAndSendMessage(chatId, "Press the button and wait a second...");
+        }
     }
 
     /**
