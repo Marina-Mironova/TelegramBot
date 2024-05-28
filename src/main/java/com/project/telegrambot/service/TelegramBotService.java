@@ -1,7 +1,6 @@
 package com.project.telegrambot.service;
 
 import com.project.telegrambot.config.BotConfig;
-import com.project.telegrambot.dto.Location;
 import com.project.telegrambot.model.entities.User;
 import com.project.telegrambot.model.repositories.UserRepository;
 import com.vdurmont.emoji.EmojiParser;
