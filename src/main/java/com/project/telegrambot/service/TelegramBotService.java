@@ -182,7 +182,7 @@ public class TelegramBotService extends TelegramLongPollingBot {
 
             case "/dailyweather", "weather for 1 day":
 
-                dailyWeatherCommand(chatId, update);
+                dailyWeatherCommand(chatId);
 
 
                 break;
@@ -202,7 +202,7 @@ public class TelegramBotService extends TelegramLongPollingBot {
      * - it sends weather forecast for the next day to the bot
      * @param chatId
      */
-    private void dailyWeatherCommand (Long chatId, Update update){
+    private void dailyWeatherCommand (Long chatId){
         prepareAndSendMessage(chatId, "Here is weather for tomorrow.");
         if (!isCallback) {
             cityChoose(chatId);
