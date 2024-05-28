@@ -1,16 +1,12 @@
 package com.project.telegrambot.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.project.telegrambot.config.BotConfig;
-import com.project.telegrambot.controller.JsonUtil;
-import com.project.telegrambot.dto.*;
 import kong.unirest.core.HttpResponse;
 import kong.unirest.core.JsonNode;
 import kong.unirest.core.Unirest;
 import kong.unirest.core.json.JSONArray;
 import kong.unirest.core.json.JSONObject;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.sql.Update;
 import org.springframework.stereotype.Service;
 
 import static com.project.telegrambot.service.TelegramBotService.ERROR_TEXT;
@@ -34,7 +30,7 @@ public class WeatherService {
 
     private static String EMAIL = "kenderrisha1@gmail.com";
 
-    private static final boolean offlineTest = false;
+    private static final boolean offlineTestMode = true;
 
 
 
@@ -92,7 +88,7 @@ public class WeatherService {
 
 
     static String getLocationKeyString(String cityName) throws Exception {
-        if(offlineTest == true) {
+        if(offlineTestMode == true) {
             JSONObject location = getJSONArray(locationRequest()).getJSONObject(0);
             return location.getString("Key");
         }
@@ -103,7 +99,7 @@ public class WeatherService {
 
     }
     static String getLocalisedNameString(String cityName) throws Exception {
-        if(offlineTest == true){
+        if(offlineTestMode == true){
             JSONObject location = getJSONArray(locationRequest()).getJSONObject(0);
             return location.getString("LocalizedName");
         } else {
@@ -146,7 +142,7 @@ public class WeatherService {
 
     static String getWeatherTextString(String locationKey) throws Exception {
         JSONObject currentWeather;
-        if (offlineTest == true){
+        if (offlineTestMode == true){
             currentWeather = getCurrentWeatherObjectList(getCurrentWeatherObject()).getJSONObject(0);
         } else {
             currentWeather = getCurrentWeatherObjectList(getCurrentWeatherObject(locationKey)).getJSONObject(0);
@@ -165,7 +161,7 @@ public class WeatherService {
     }
     static String getIsDayTime(String locationKey) throws Exception {
         JSONObject currentWeather;
-        if (offlineTest == true){
+        if (offlineTestMode == true){
             currentWeather = getCurrentWeatherObjectList(getCurrentWeatherObject()).getJSONObject(0);
         }else {
             currentWeather = getCurrentWeatherObjectList(getCurrentWeatherObject(locationKey)).getJSONObject(0);
@@ -190,7 +186,7 @@ public class WeatherService {
     }
 
     static String getLink(String locationKey) throws Exception {
-        if (offlineTest == true){
+        if (offlineTestMode == true){
             JSONObject currentWeather = getCurrentWeatherObjectList(getCurrentWeatherObject()).getJSONObject(0);
             return currentWeather.getString("Link");
         } else {
@@ -201,7 +197,7 @@ public class WeatherService {
 
     static String getCurrentWeatherTemperature(String locationKey) throws Exception {
         JSONObject currentWeather;
-        if(offlineTest == true){
+        if(offlineTestMode == true){
             currentWeather = getCurrentWeatherObjectList(getCurrentWeatherObject()).getJSONObject(0);
         } else {
             currentWeather = getCurrentWeatherObjectList(getCurrentWeatherObject(locationKey)).getJSONObject(0);
@@ -237,7 +233,7 @@ public class WeatherService {
         return "Weather now: \n"
                 + "Day time: " + getIsDayTime(locationKey) + "\n"
                 + "Weather: " + getWeatherTextString(locationKey) +"\n"
-                + getCurrentWeatherTemperature(locationKey)
+                + getCurrentWeatherTemperature(locationKey) + "\n"
                 + getLink(locationKey);
     }
 
@@ -278,7 +274,7 @@ public class WeatherService {
 
     static String getDailyWeatherHeadlineString(String locationKey) throws Exception {
         JSONObject dailyWeatherHeadline;
-        if (offlineTest == true){
+        if (offlineTestMode == true){
             dailyWeatherHeadline = getDailyWeatherObject(getDailyWeatherRequest()).getJSONObject("Headline");
         } else {
             dailyWeatherHeadline = getDailyWeatherObject(getDailyWeatherRequest(locationKey)).getJSONObject("Headline");
@@ -310,7 +306,7 @@ public class WeatherService {
 
     static String getDailyWeatherForecastStringDate(String locationKey) throws Exception {
         JSONObject dailyWeatherForecast;
-        if (offlineTest == true){
+        if (offlineTestMode == true){
             dailyWeatherForecast = getDailyWeatherObjectList(getDailyWeatherObject(getDailyWeatherRequest()),"DailyForecasts").getJSONObject(0);
         } else {
             dailyWeatherForecast = getDailyWeatherObjectList(getDailyWeatherObject(getDailyWeatherRequest(locationKey)),"DailyForecasts").getJSONObject(0);
@@ -323,7 +319,7 @@ public class WeatherService {
 
 
     static JSONObject getDailyWeatherForecastTemperature(String locationKey) throws Exception {
-        if (offlineTest == true){
+        if (offlineTestMode == true){
             return getDailyWeatherObjectList(getDailyWeatherObject(getDailyWeatherRequest()),"DailyForecasts").getJSONObject(0).getJSONObject("Temperature");
         } else {
             return getDailyWeatherObjectList(getDailyWeatherObject(getDailyWeatherRequest(locationKey)),"DailyForecasts").getJSONObject(0).getJSONObject("Temperature");
@@ -358,7 +354,7 @@ public class WeatherService {
 
     static JSONObject getDailyWeatherDay(String locationKey) throws Exception {
         JSONObject dailyWeatherForecast;
-        if (offlineTest == true){
+        if (offlineTestMode == true){
             dailyWeatherForecast = getDailyWeatherObjectList(getDailyWeatherObject(getDailyWeatherRequest()),"DailyForecasts").getJSONObject(0);
         } else {
             dailyWeatherForecast = getDailyWeatherObjectList(getDailyWeatherObject(getDailyWeatherRequest(locationKey)),"DailyForecasts").getJSONObject(0);
@@ -374,7 +370,7 @@ public class WeatherService {
 
     static JSONObject getDailyWeatherNight(String locationKey) throws Exception {
         JSONObject dailyWeatherForecast;
-        if (offlineTest == true){
+        if (offlineTestMode == true){
             dailyWeatherForecast = getDailyWeatherObjectList(getDailyWeatherObject(getDailyWeatherRequest()),"DailyForecasts").getJSONObject(0);
         } else {
             dailyWeatherForecast = getDailyWeatherObjectList(getDailyWeatherObject(getDailyWeatherRequest(locationKey)),"DailyForecasts").getJSONObject(0);

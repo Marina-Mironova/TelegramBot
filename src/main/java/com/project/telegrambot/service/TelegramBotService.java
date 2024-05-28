@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
@@ -47,6 +48,8 @@ public class TelegramBotService extends TelegramLongPollingBot {
     String CALLBACK_CITY = null;
 
     static final String ERROR_TEXT = "Error occurred: ";
+
+    static boolean isCallback = false;
 
     private List<Message> sendMessages = new ArrayList<>();
 
@@ -96,37 +99,10 @@ public class TelegramBotService extends TelegramLongPollingBot {
     public void onUpdateReceived(Update update) {
         // We check if the update has a message and the message has text
         if (update.hasMessage() && update.getMessage().hasText()) {
-            String messageText = update.getMessage().getText();
-            long chatId = update.getMessage().getChatId();
-            prepareAndSendMessage(chatId, "Thank you!");
-            MESSAGE_TEXT = messageText;
-            try {
-                menuBot(messageText, chatId, update);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        } //else if (update.hasCallbackQuery()) {
-//
-//            String callbackData = update.getCallbackQuery().getData();
-//            long chatId = update.getCallbackQuery().getMessage().getChatId();
-//
-//
-//            prepareAndSendMessage(chatId, "Your city is " + callbackData);
-//            CALLBACK_CITY = callbackData;
-//            prepareAndSendMessage(chatId, "Now I prepare the weather forecast for you. City: " + CALLBACK_CITY + ". Please wait.");
-//            prepareAndSendMessage(chatId, "The city is " + CALLBACK_CITY);
-//                try {
-//                    menuBot(MESSAGE_TEXT, chatId, update); //подумай, как сделать так, чтобы не спрашивал город два раза
-//                } catch (Exception e) {
-//                    throw new RuntimeException(e);
-//                }
-
-
-
-
-
-
-  //      }
+            messageHasText(update);
+      } else {
+            callbackQueryExists(update);
+        }
 
     }
 
@@ -232,9 +208,11 @@ public class TelegramBotService extends TelegramLongPollingBot {
      */
     private void dailyWeatherCommand (Long chatId, Update update){
         prepareAndSendMessage(chatId, "Here is weather for tomorrow.");
-        cityChoose(chatId);
-        callbackQueryExists(update);
+        if (isCallback == false) {
+            cityChoose(chatId);
+        }
         prepareAndSendMessage(chatId, sendDailyWeather(CALLBACK_CITY));
+
     }
 
     /**
@@ -244,9 +222,9 @@ public class TelegramBotService extends TelegramLongPollingBot {
      */
     private void currentWeatherCommand(Long chatId, Update update){
         prepareAndSendMessage(chatId, "Here is weather for today.");
-        cityChoose(chatId);
-        callbackQueryExists(update);
-
+        if (isCallback == false){
+            cityChoose(chatId);
+        }
         prepareAndSendMessage(chatId, sendCurrentWeather(CALLBACK_CITY));
 
     }
@@ -320,13 +298,30 @@ public class TelegramBotService extends TelegramLongPollingBot {
 
             prepareAndSendMessage(chatId, "Your city is " + callbackData);
             CALLBACK_CITY = callbackData;
+            isCallback = true;
             prepareAndSendMessage(chatId, "Now I prepare the weather forecast for you. City: " + CALLBACK_CITY + ". Please wait.");
             prepareAndSendMessage(chatId, "The city is " + CALLBACK_CITY);
             try {
-                menuBot(MESSAGE_TEXT, chatId, update); //подумай, как сделать так, чтобы не спрашивал город два раза
+                menuBot(MESSAGE_TEXT, chatId, update);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
+
+            isCallback = false;
+            CALLBACK_CITY = null;
+            // = null;
+        }
+    }
+
+    private void messageHasText(Update update){
+        String messageText = update.getMessage().getText();
+        long chatId = update.getMessage().getChatId();
+        prepareAndSendMessage(chatId, "Thank you!");
+        MESSAGE_TEXT = messageText;
+        try {
+            menuBot(messageText, chatId, update);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
