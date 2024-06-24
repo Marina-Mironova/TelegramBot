@@ -1,7 +1,6 @@
-package com.project.telegrambot.config;
+package com.project.telegrambot.config.bot;
 
 import com.project.telegrambot.service.TelegramBotService;
-import com.project.telegrambot.service.WeatherService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.ContextRefreshedEvent;

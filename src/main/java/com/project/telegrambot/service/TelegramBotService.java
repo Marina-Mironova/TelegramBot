@@ -1,6 +1,6 @@
 package com.project.telegrambot.service;
 
-import com.project.telegrambot.config.BotConfig;
+import com.project.telegrambot.config.bot.BotConfig;
 import com.project.telegrambot.model.entities.User;
 import com.project.telegrambot.model.repositories.UserRepository;
 import com.vdurmont.emoji.EmojiParser;
@@ -24,8 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.project.telegrambot.service.KeyboardButtonService.getReplyKeyboardMarkup;
-import static com.project.telegrambot.service.WeatherService.sendCurrentWeather;
-import static com.project.telegrambot.service.WeatherService.sendDailyWeather;
+
 
 @Data
 @Slf4j
@@ -36,6 +35,8 @@ public class TelegramBotService extends TelegramLongPollingBot {
     private String MESSAGE_TEXT = "";
     @Autowired
     private UserRepository userRepository;
+//    @Autowired
+//    private WeatherService weatherService;
 
     final BotConfig config;
 
@@ -50,6 +51,10 @@ public class TelegramBotService extends TelegramLongPollingBot {
     boolean isCallback = false;
 
     private List<Message> sendMessages = new ArrayList<>();
+
+   // final WeatherService weatherConfig;
+
+   // WeatherService weatherService = new WeatherService(weatherConfig);
 
 
     /**
@@ -203,13 +208,14 @@ public class TelegramBotService extends TelegramLongPollingBot {
      * @param chatId
      */
     private void dailyWeatherCommand (Long chatId){
+        WeatherService weatherService = new WeatherService();
         prepareAndSendMessage(chatId, "Here is weather for tomorrow.");
         if (!isCallback) {
             cityChoose(chatId);
         }
 
         if (CALLBACK_CITY != null) {
-            prepareAndSendMessage(chatId, sendDailyWeather(CALLBACK_CITY));
+            prepareAndSendMessage(chatId, weatherService.sendDailyWeather(CALLBACK_CITY));
         }
         else {
             prepareAndSendMessage(chatId, "Press the button and wait a second...");
@@ -223,13 +229,14 @@ public class TelegramBotService extends TelegramLongPollingBot {
      * @param chatId
      */
     private void currentWeatherCommand(Long chatId){
+        WeatherService weatherService = new WeatherService();
         prepareAndSendMessage(chatId, "Here is weather for today.");
         if (!isCallback){
             cityChoose(chatId);
         }
 
         if (CALLBACK_CITY != null) {
-            prepareAndSendMessage(chatId, sendCurrentWeather(CALLBACK_CITY));
+            prepareAndSendMessage(chatId, weatherService.sendCurrentWeather(CALLBACK_CITY));
         }
         else {
             prepareAndSendMessage(chatId, "Press the button and wait a second...");
@@ -332,4 +339,21 @@ public class TelegramBotService extends TelegramLongPollingBot {
         }
     }
 
+//    private void deleteMe(Message msg){
+//        if (userRepository.findById(msg.getChatId()).isPresent()) {
+//
+//            var chatId = msg.getChatId();
+//            var chat = msg.getChat();
+//
+//            User user = User();
+//
+//            userRepository.delete(user);
+//            log.info("user deleted: " + user);
+//        }
+//        else {
+//            prepareAndSendMessage(msg.getChatId(), "You are not registered.");
+//        }
+//    }
+
 }
+
