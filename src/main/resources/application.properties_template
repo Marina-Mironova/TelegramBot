@@ -1,5 +1,5 @@
-bot.name= NewsFromSiteBot
-bot.token= 6098183432:AAHk195s6Of1gdgfvibxUIWj1OJunw2AfSg
+bot.name=
+bot.token= 
 
 #db related settings
 spring.jpa.hibernate.ddl-auto=update
@@ -9,6 +9,4 @@ spring.datasource.password=db_user
 spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
 spring.jpa.database-platform=org.hibernate.dialect.MySQLDialect
 spring.jpa.show-sql=true
-
-
 

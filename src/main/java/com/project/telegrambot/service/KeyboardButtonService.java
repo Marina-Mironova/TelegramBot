@@ -4,7 +4,6 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Message;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
@@ -12,7 +11,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.Keyboard
 import java.util.ArrayList;
 import java.util.List;
 
-//import static com.project.telegrambot.service.TelegramBotService.WEATHER_NOW;
+
 
 @Slf4j
 @Data
@@ -27,14 +26,8 @@ public class KeyboardButtonService {
         keyboardMarkup.setSelective(true);
         keyboardMarkup.setResizeKeyboard(true);
         keyboardMarkup.setOneTimeKeyboard(false);
-        //InlineKeyboardMarkup keyboardMarkup = new InlineKeyboardMarkup();
         List<KeyboardRow> keyboardRows = new ArrayList<>();
         KeyboardRow row = new KeyboardRow();
-
-        //var weatherNowButton = new KeyboardButton;
-
-        // weatherNowButton.setText("weather now");
-//weatherNowButton.setCallbackData(WEATHER_NOW);
 
         row.add(new KeyboardButton("weather now"));
         row.add(new KeyboardButton("weather for 1 day"));

@@ -35,8 +35,7 @@ public class TelegramBotService extends TelegramLongPollingBot {
     private String MESSAGE_TEXT = "";
     @Autowired
     private UserRepository userRepository;
-//    @Autowired
-//    private WeatherService weatherService;
+
 
     final BotConfig config;
 
@@ -52,9 +51,9 @@ public class TelegramBotService extends TelegramLongPollingBot {
 
     private List<Message> sendMessages = new ArrayList<>();
 
-   // final WeatherService weatherConfig;
 
-   // WeatherService weatherService = new WeatherService(weatherConfig);
+
+
 
 
     /**
