@@ -93,11 +93,7 @@
 			<artifactId>unirest-objectmapper-jackson</artifactId>
 		</dependency>
 
-		<dependency>
-			<groupId>com.rometools</groupId>
-			<artifactId>rome</artifactId>
-			<version>2.1.0</version>
-		</dependency>
+
 
 		<dependency>
 			<groupId>com.vdurmont</groupId>

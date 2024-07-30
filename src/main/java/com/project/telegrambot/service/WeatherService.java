@@ -17,7 +17,6 @@ import static com.project.telegrambot.service.TelegramBotService.ERROR_TEXT;
 
 @Service
 @Slf4j
-@PropertySource("application.properties")
 public class WeatherService {
 
 
@@ -72,7 +71,7 @@ public class WeatherService {
 
 
 
-     JSONArray getJSONArray(JsonNode jsonNode) throws Exception {
+     JSONArray getJSONArray(JsonNode jsonNode) {
 
 
         return jsonNode.getArray();
@@ -101,7 +100,7 @@ public class WeatherService {
         }
     }
 
-    private JsonNode getCurrentWeatherObject(String locationKey)  {
+    JsonNode getCurrentWeatherObject(String locationKey)  {
 
 
         HttpResponse<JsonNode> response = Unirest.get(WEATHER_URL_NOW)

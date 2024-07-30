@@ -69,11 +69,10 @@ public class TelegramBotService extends TelegramLongPollingBot {
         this.config = config;
         List<BotCommand> listOfCommands = new ArrayList<>();
         listOfCommands.add(new BotCommand("/start", "register and get a welcome message"));
-        listOfCommands.add(new BotCommand("/mydata", "get your data stored"));
         listOfCommands.add(new BotCommand("/help", "info how to use this bot"));
         listOfCommands.add(new BotCommand("/weathernow", "current weather"));
         listOfCommands.add(new BotCommand("/dailyweather", "weather info for the next day"));
-        //listOfCommands.add(new BotCommand("/stop", "stop sending new rss to you"));
+
         try {
             this.execute(new SetMyCommands(listOfCommands, new BotCommandScopeDefault(), null));
 
@@ -338,21 +337,6 @@ public class TelegramBotService extends TelegramLongPollingBot {
         }
     }
 
-//    private void deleteMe(Message msg){
-//        if (userRepository.findById(msg.getChatId()).isPresent()) {
-//
-//            var chatId = msg.getChatId();
-//            var chat = msg.getChat();
-//
-//            User user = User();
-//
-//            userRepository.delete(user);
-//            log.info("user deleted: " + user);
-//        }
-//        else {
-//            prepareAndSendMessage(msg.getChatId(), "You are not registered.");
-//        }
-//    }
 
 }
 
